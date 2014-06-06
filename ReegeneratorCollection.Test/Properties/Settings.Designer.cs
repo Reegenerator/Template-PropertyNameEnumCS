@@ -8,7 +8,7 @@
 // </auto-generated>
 //------------------------------------------------------------------------------
 
-namespace ReegeneratorCollection.Test.Properties {
+namespace RgenLib.Test.Properties {
 
 
     [global::System.Runtime.CompilerServices.CompilerGeneratedAttribute()]

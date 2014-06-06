@@ -2,7 +2,7 @@
 
 using System.Text;
 
-namespace ReegeneratorCollection.Extensions
+namespace RgenLib.Extensions
 {
 	public static class String
 	{

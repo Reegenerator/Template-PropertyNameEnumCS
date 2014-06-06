@@ -4,9 +4,9 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace ReegeneratorCollection.Attributes
+namespace RgenLib.Attributes
 {
-    public class PropertyNamesAttribute: GeneratorAttribute
+    public class PropertyNamesOptionAttribute: GeneratorOptionAttribute
     {
     }
 }

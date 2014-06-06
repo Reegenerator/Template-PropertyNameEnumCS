@@ -10,7 +10,7 @@ using Microsoft.VisualBasic;
 using Microsoft.VisualBasic.CompilerServices;
 using Debugger = System.Diagnostics.Debugger;
 
-namespace ReegeneratorCollection.Extensions { 
+namespace RgenLib.Extensions { 
     static class Debug {
 
         #region Debug helpers

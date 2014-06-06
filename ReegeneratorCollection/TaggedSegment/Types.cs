@@ -1,5 +1,5 @@
 ﻿
-namespace ReegeneratorCollection.TaggedSegment
+namespace RgenLib.TaggedSegment
 {
 	public enum Types
 	{

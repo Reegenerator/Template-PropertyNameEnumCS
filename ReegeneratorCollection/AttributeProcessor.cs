@@ -7,39 +7,15 @@ using System.Threading.Tasks;
 using System.Xml.Linq;
 using EnvDTE;
 using EnvDTE80;
-using ReegeneratorCollection.Attributes;
-using ReegeneratorCollection.Extensions;
+using RgenLib.Extensions;
+using RgenLib.Attributes;
+using RgenLib.TaggedSegment;
 
-namespace ReegeneratorCollection {
+namespace RgenLib {
    public class AttributeProcessor {
             private const string NameSuffix = "_GenAttribute";
 
-        public enum RegenModes {
-            OnVersionChanged,
-            Once,
-            Always
-        }
-
-        /// <summary>
-        /// Cause of code generation
-        /// </summary>
-        /// <remarks></remarks>
-        public enum TriggerTypes {
-            /// <summary>
-            /// Code generation is triggered because the class is marked with a GeneratorAttribute 
-            /// </summary>
-            /// <remarks></remarks>
-            Attribute,
-            /// <summary>
-            /// Code generation is triggered because the baseClass is marked with a GeneratorAttribute
-            /// </summary>
-            /// <remarks></remarks>
-            BaseClassAttribute
-        }
-        public enum TagTypes {
-            Generated,
-            InsertPoint
-        }
+        
 
         public CodeProperty2 ParentProperty { get; set; }
         public CodeFunction2 ParentFunction { get; set; }
@@ -59,20 +35,13 @@ namespace ReegeneratorCollection {
         /// Without a class differentiator, when searching for a class level segment, it will match all segments within the class
         /// and will cause unintended deletion when the segment needs to be updated
         /// </remarks>
-        [XmlProperty("Class")]
+        [XmlAttribute("Class")]
         public string SegmentClass { get; set; }
-        private static Dictionary<Type, Dictionary<string, PropertyInfo>> _XmlPropertiesByType = new Dictionary<Type, Dictionary<string, PropertyInfo>>();
-        public static Dictionary<Type, Dictionary<string, PropertyInfo>> XmlPropertiesByType {
-            get {
-                return _XmlPropertiesByType;
-            }
-            set {
-                _XmlPropertiesByType = value;
-            }
-        }
+
+  
 
         //INSTANT C# NOTE: These were formerly VB static local variables:
-        private static readonly Assembly GetTypeFromTagName_assm = typeof(GeneratorAttribute).Assembly;
+        private static readonly Assembly GetTypeFromTagName_assm = typeof(GeneratorOptionAttribute).Assembly;
 
         public virtual XElement TagPrototype {
             get {
@@ -112,12 +81,12 @@ namespace ReegeneratorCollection {
             //Do once per application run. Can't make shared because we need to get actual derived class
             var type = GetType();
             TypeCache = TypeResolver.ByType(type);
-            //Store members with XmlPropertyAttribute into a dictionary, to be used when writing the xml
+            //Store members with XmlAttributeAttribute into a dictionary, to be used when writing the xml
             if (!(XmlPropertiesByType.ContainsKey(type))) {
                 var xmlmembers = new Dictionary<string, PropertyInfo>();
                 var members = TypeCache.GetMembers().ToArray();
                 foreach (var m in members) {
-                    var xmlName = m.GetCustomAttribute<XmlPropertyAttribute>();
+                    var xmlName = m.GetCustomAttribute<XmlAttributeAttribute>();
                     if (xmlName == null) {
                         continue;
                     }
@@ -142,8 +111,8 @@ namespace ReegeneratorCollection {
 		{
 			return XmlPropertiesByType[GetType()];
 		}
-        public new virtual GeneratorAttribute MemberwiseClone() {
-            return (GeneratorAttribute)base.MemberwiseClone();
+        public new virtual GeneratorOptionAttribute MemberwiseClone() {
+            return (GeneratorOptionAttribute)base.MemberwiseClone();
         }
         public void CopyPropertyFromTag(XElement xele) {
             var xmlProps = GetXmlProperties();
@@ -176,32 +145,9 @@ namespace ReegeneratorCollection {
                 SetPropertyFromAttributeArgumentString(propInfo, arg.Value);
             }
         }
-        /// <summary>
-        /// Parse Attribute Argument into the actual string value
-        /// </summary>
-        /// <param name="propInfo"></param>
-        /// <param name="value"></param>
-        /// <remarks>
-        /// Attribute argument is presented exactly as it was typed
-        /// Ex: SomeArg:="Test" would result in the Argument.Value "Test" (with quote)
-        /// Ex: SomeArg:=("Test") would result in the Argument.Value ("Test") (with parentheses and quote)
-        /// </remarks>
-        private void SetPropertyFromAttributeArgumentString(PropertyInfo propInfo, string value) {
-            string stringValue = null;
-            var propType = propInfo.PropertyType;
-            if (propType.IsEnum) {
-                stringValue = value.StripQualifier();
-            }
-            else if (propType == typeof(string)) {
-                stringValue = value.Trim('\"');
-            }
-            else {
-                stringValue = value;
-            }
-            propInfo.SetValueFromString(this, stringValue);
-        }
+   
 
-        [XmlProperty("Ver")]
+        [XmlAttribute("Ver")]
         public virtual Version Version { get; set; }
 
         /// <summary>
@@ -210,7 +156,7 @@ namespace ReegeneratorCollection {
         /// <value></value>
         /// <returns></returns>
         /// <remarks>Can be overridden by GenInfo.RegenMode</remarks>
-        [XmlProperty("Mode")]
+        [XmlAttribute("Mode")]
         public virtual RegenModes RegenMode { get; set; }
 
 
@@ -244,7 +190,7 @@ namespace ReegeneratorCollection {
             }
         }
 
-        public virtual bool AreArgumentsEquals(GeneratorAttribute other) {
+        public virtual bool AreArgumentsEquals(GeneratorOptionAttribute other) {
             return Version == other.Version;
         }
     }

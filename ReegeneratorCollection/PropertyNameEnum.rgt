@@ -1,4 +1,4 @@
-<%@ Template Language="C#" 
+<%@ Template Language="C#" ParentClass="TaggedCodeRenderer"
             ClassName="PropertyNameEnum" 
             DisplayName="PropertyNameEnum" 
             Description="PropertyNameEnum" %>

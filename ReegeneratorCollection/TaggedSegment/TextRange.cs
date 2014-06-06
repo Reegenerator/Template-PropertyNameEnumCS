@@ -1,11 +1,11 @@
 ﻿
 using EnvDTE;
 
-namespace ReegeneratorCollection.TaggedSegment
+namespace RgenLib.TaggedSegment
 {
 
     /// <summary>
-    /// Creat own class because the built in TextRange is not usable (used for regular expression search result)
+    /// Create own class because the built in TextRange is not usable (used for regular expression search result)
     /// </summary>
     /// <remarks></remarks>
 	public class TextRange
@@ -41,7 +41,7 @@ namespace ReegeneratorCollection.TaggedSegment
                 (int)( vsEPReplaceTextOptions.vsEPReplaceTextAutoformat | vsEPReplaceTextOptions.vsEPReplaceTextNormalizeNewlines));
 		}
 
-		public void Delete()
+		public void DeleteText()
 		{
 			if (IsValid)
 			{

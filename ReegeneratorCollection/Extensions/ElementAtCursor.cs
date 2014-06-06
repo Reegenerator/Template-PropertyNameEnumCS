@@ -7,7 +7,7 @@ using System.Windows.Forms;
 using EnvDTE;
 using EnvDTE80;
 
-namespace ReegeneratorCollection.Extensions {
+namespace RgenLib.Extensions {
     public static class ElementAtCursor {
 
         static public CodeElement GetCodeElementAtCursor(DTE dte, vsCMElement elementType) {
@@ -51,7 +51,7 @@ namespace ReegeneratorCollection.Extensions {
                 objCursorTextPoint = objTextDocument.Selection.ActivePoint;
             }
             // ReSharper disable once EmptyGeneralCatchClause
-            catch (Exception ex) {
+            catch (Exception ) {
                 //swallow exception
             }
 

@@ -15,11 +15,11 @@ using System.Xml;
 using System.Xml.Linq;
 using EnvDTE;
 using EnvDTE80;
-using ReegeneratorCollection.Attributes;
+using RgenLib.Attributes;
 using ProjectItem = Kodeo.Reegenerator.Wrappers.ProjectItem;
 using Solution = Kodeo.Reegenerator.Wrappers.Solution;
 
-namespace ReegeneratorCollection.Extensions
+namespace RgenLib.Extensions
 {
 	internal static class General
 	{
@@ -34,7 +34,7 @@ namespace ReegeneratorCollection.Extensions
 		private static readonly Regex RemoveEmptyLines_regex = new Regex("^\\s+$[\\r\\n]*", RegexOptions.Multiline);
 		private static readonly Dictionary<string, Assembly> GetTypeFromProject_cache = new Dictionary<string, Assembly>();
 		private static readonly ConcurrentDictionary<CodeClass, Type> ToPropertyInfo_classCache = new ConcurrentDictionary<CodeClass, Type>();
-		private static readonly Type GetGeneratorAttribute_type = typeof(GeneratorAttribute);
+		private static readonly Type GetGeneratorAttribute_type = typeof(GeneratorOptionAttribute);
 
 		public static IEnumerable<CodeClass2> GetClassesEx(this ProjectItem item)
 		{
@@ -557,11 +557,16 @@ namespace ReegeneratorCollection.Extensions
 			return classType.GetProperty(prop.Name, BindingFlags.DeclaredOnly | BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic);
 		}
 
-		public static GeneratorAttribute GetGeneratorAttribute(this MemberInfo mi)
+	    public static bool HasAttribute<T>(this MemberInfo mi) where T : Attribute
+	    {
+	        return mi.GetCustomAttributes<T>().Any();
+	    }
+
+		public static GeneratorOptionAttribute GetGeneratorAttribute(this MemberInfo mi)
 		{
 
             var genAttr = mi.GetCustomAttributes().FirstOrDefault(x => x.GetType().IsSubclassOf(GetGeneratorAttribute_type));
-            return (GeneratorAttribute)genAttr;
+            return (GeneratorOptionAttribute)genAttr;
 		}
 
 		public static Assembly GetAssemblyOfProjectItem(this EnvDTE.ProjectItem pi)
@@ -692,6 +697,13 @@ namespace ReegeneratorCollection.Extensions
 			return (ctr.AsFullName ?? ctr.AsString);
 		}
 
+	   static public bool AllPropertiesEquals<T>(this T obj1, T obj2)
+	   {
+	       var typeCache = TypeResolver.ByType(typeof (T));
+	       var props = typeCache.GetProperties();
+	       return props.Any(p => !p.GetValue(obj1).Equals(p.GetValue(obj2)));
+	   }
+     
 	}
 
 }

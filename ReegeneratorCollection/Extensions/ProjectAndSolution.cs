@@ -6,7 +6,7 @@ using System.Windows.Forms;
 using EnvDTE;
 using EnvDTE80;
 
-namespace ReegeneratorCollection.Extensions
+namespace RgenLib.Extensions
 {
 	internal static class ProjectAndSolution
 	{

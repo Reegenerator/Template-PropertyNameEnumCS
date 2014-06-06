@@ -6,27 +6,31 @@ using System.Linq;
 using System.Xml.Linq;
 using EnvDTE;
 using EnvDTE80;
-using ReegeneratorCollection.Attributes;
-using ReegeneratorCollection.Extensions;
+using RgenLib.Extensions;
+using RgenLib.Attributes;
 using TextPoint = EnvDTE.TextPoint;
 using System.Reflection;
 
-namespace ReegeneratorCollection.TaggedSegment {
-    public partial class Manager<T> where T : GeneratorAttribute, new()
+namespace RgenLib.TaggedSegment {
+    public partial class Manager<T> where T : TaggedCodeRenderer, new()
     {
 
         /// <summary>
         /// Holds information required to generate code segments
         /// </summary>
         /// <remarks></remarks>
-        public class Writer {
+        public class Writer
+        {
+            private readonly Manager<T> _Manager;
 
+            public Manager<T> Manager { get { return _Manager; } }
+            public OptionTag Tag { get; set; }
 
-
-            public Writer() {
-                //Do nothing
-                GenAttribute = new T();
+            public Writer(Manager<T> manager) {
+                _Manager = manager;
+               
             }
+            
 
             /// <summary>
             /// Create a new writer with the same Class, TriggeringBaseClass and GeneratorAttribute
@@ -34,21 +38,21 @@ namespace ReegeneratorCollection.TaggedSegment {
             /// <param name="parentWriter">
             /// source of properties to be copied
             /// </param>
-            /// <param name="segClass"></param>
+            /// <param name="segCategory"></param>
             /// <remarks></remarks>
-            public Writer(Writer parentWriter, string segClass = "") {
+            public Writer(Writer parentWriter, string segCategory = "") {
                 Class = parentWriter.Class;
                 TriggeringBaseClass = parentWriter.TriggeringBaseClass;
                 //Clone instead of reusing parent's attribute, because they may have different property values
-                GenAttribute = (T)parentWriter.GenAttribute.MemberwiseClone();
-                GenAttribute.SegmentClass = segClass;
+                Tag =(OptionTag) parentWriter.Tag.MemberwiseClone();
+                Category = segCategory;
             }
 
-
-
+            
+            public string Category {get;set;}
             public CodeClass2 TriggeringBaseClass { get; set; }
             public CodeClass2 Class { get; set; }
-            public T GenAttribute { get; set; }
+            //public T Renderer { get; set; }
             public TextPoint SearchStart { get; set; }
             public TextPoint SearchEnd { get; set; }
             public TextPoint InsertStart { get; set; }
@@ -69,13 +73,9 @@ namespace ReegeneratorCollection.TaggedSegment {
             public bool HasError { get; set; }
 
             private StringBuilder _Status;
+
             public StringBuilder Status {
-                get {
-                    if (_Status == null) {
-                        _Status = new StringBuilder();
-                    }
-                    return _Status;
-                }
+                get { return _Status ?? (_Status = new StringBuilder()); }
             }
 
             /// <summary>
@@ -93,9 +93,9 @@ namespace ReegeneratorCollection.TaggedSegment {
 
             public void OutlineText() {
 
-                var endWithoutNewline = InsertedEnd.CreateEditPoint();
-                endWithoutNewline.CharLeft(1);
-                InsertStart.CreateEditPoint().OutlineSection(endWithoutNewline);
+                var endPointExcludingNewline = InsertedEnd.CreateEditPoint();
+                endPointExcludingNewline.CharLeft(1);
+                InsertStart.CreateEditPoint().OutlineSection(endPointExcludingNewline);
             }
 
             public TextPoint GetContentEndPoint() {
@@ -117,15 +117,11 @@ namespace ReegeneratorCollection.TaggedSegment {
             #region Tag Generation //!――――――――――――――――――――――――――――――――――――――――――――――――――――――
 
             public XElement GenXmlTag() {
-                //set to nothing if it's by Attribute(default) so Trigger attribute is not written out
-                GeneratorAttribute.TriggerTypes? triggerType = null;
-                if (IsTriggeredByBaseClass) {
-                    triggerType = GeneratorAttribute.TriggerTypes.BaseClassAttribute;
-                }
+                //set to null if it's default, so it doesn't need to be written in the tag
+                var triggerType = IsTriggeredByBaseClass ? (TriggerTypes?)TriggerTypes.BaseClassAttribute : null;
+                var triggerInfo = (triggerType == TriggerTypes.BaseClassAttribute) ? TriggeringBaseClass.Name : null;
 
-                var triggerInfo = (triggerType == GeneratorAttribute.TriggerTypes.BaseClassAttribute) ? TriggeringBaseClass.Name : null;
-
-                var xml = new XElement(GenAttribute.TagPrototype);
+                var xml = new XElement(_Manager.Renderer.TagPrototype);
                 if (triggerType != null) {
                     xml.SetAttributeValue("Trigger", triggerType.ToString());
                 }
@@ -134,18 +130,17 @@ namespace ReegeneratorCollection.TaggedSegment {
                 }
                 xml.SetAttributeValue("Date", DateTime.Now.ToString(CultureInfo.InvariantCulture));
 
-                var xmlNameType = typeof(XmlPropertyAttribute);
-                var membersWithXmlName = GenAttribute.TypeCache.GetMembers()
-                    .Select(m => new { Member = m, XmlName = m.GetCustomAttributes<XmlPropertyAttribute>().FirstOrDefault() })
-                    .Where(x => x.XmlName != null);
+                var xmlNameType = typeof(XmlAttributeAttribute);
+                //var membersWithXmlName = _Manager.Renderer.OptionAttributeTypeCache.GetMembers()
+                //    .Select(m => new { Member = m, XmlName = m.GetCustomAttributes<XmlAttributeAttribute>().FirstOrDefault() })
+                //    .Where(x => x.XmlName != null);
 
+                foreach (var keyValuePair in Manager.GetXmlAttributes()) {
 
-
-                foreach (var p in GenAttribute.GetXmlProperties()) {
-
-                    var propValue = p.Value.GetValue(GenAttribute);
+                    var propValue = keyValuePair.Value.GetValue(Tag);
+                    //only write the xml attribute if it has value, to keep the tag concise
                     if (propValue != null) {
-                        xml.Add(new XAttribute(p.Key, propValue));
+                        xml.Add(new XAttribute(keyValuePair.Key, propValue));
                     }
 
                 }

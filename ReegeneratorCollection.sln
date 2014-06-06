@@ -3,7 +3,7 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio 2013
 VisualStudioVersion = 12.0.30501.0
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ReegeneratorCollection", "ReegeneratorCollection\ReegeneratorCollection.csproj", "{FA884BB3-23D7-495C-A246-364FB3B2A478}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "RgenLib", "ReegeneratorCollection\RgenLib.csproj", "{FA884BB3-23D7-495C-A246-364FB3B2A478}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Reegenerator", "Reegenerator", "{13E4EC81-152E-4990-9866-252885A73D92}"
 	ProjectSection(SolutionItems) = preProject
@@ -11,9 +11,9 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Reegenerator", "Reegenerato
 		RgenDependencies.xml = RgenDependencies.xml
 	EndProjectSection
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ReegeneratorCollection.Test", "ReegeneratorCollection.Test\ReegeneratorCollection.Test.csproj", "{C551FD34-0538-4362-8CE2-2DFC0CC20E85}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "RgenLib.Test", "ReegeneratorCollection.Test\RgenLib.Test.csproj", "{C551FD34-0538-4362-8CE2-2DFC0CC20E85}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ReegeneratorCollection.Attributes", "ReegeneratorCollecton.Attributes\ReegeneratorCollection.Attributes.csproj", "{07C4AE0F-B6A5-45FC-982C-E4EC2C0B6661}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "RgenLib.Attributes", "ReegeneratorCollecton.Attributes\RgenLib.Attributes.csproj", "{07C4AE0F-B6A5-45FC-982C-E4EC2C0B6661}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

@@ -1,12 +1,14 @@
 using System.Windows.Forms;
+using System.Xml.Linq;
 using EnvDTE80;
 using EnvDTE;
 using Kodeo.Reegenerator.Generators;
 using Kodeo.Reegenerator.Wrappers;
-using ReegeneratorCollection.Extensions;
-using ReegeneratorCollection.TaggedSegment;
+using RgenLib.Attributes;
+using RgenLib.Extensions;
+using RgenLib.TaggedSegment;
 
-namespace ReegeneratorCollection {
+namespace RgenLib {
     using System;
     using System.Linq;
     using System.Collections.Generic;
@@ -24,14 +26,18 @@ namespace ReegeneratorCollection {
             // var projectItem = base.ProjectItem;
         }
 
-        private Manager<ReegeneratorCollection.Attributes.PropertyNamesAttribute> Manager = new Manager<ReegeneratorCollection.Attributes.PropertyNamesAttribute>();
+        public PropertyNameEnum() {
+            Manager = new Manager<PropertyNameEnum>(this);
+        }
+
+        private Manager<PropertyNameEnum> Manager;
         public void WritePropertyNames(CodeClass2 cls) {
             var props = cls.GetProperties().Select(p => p.ToPropertyInfo()).ToArray();
             var output = new System.IO.StringWriter();
             GenEnum(output, props, true);
             var code = output.ToString();
 
-            var start =cls.GetStartPoint(vsCMPart.vsCMPartBody);
+            var start = cls.GetStartPoint(vsCMPart.vsCMPartBody);
             start.CreateEditPoint().InsertAndFormat(code);
 
         }
@@ -47,6 +53,30 @@ namespace ReegeneratorCollection {
             }
             //unused. Call the GenEnum function instead
             return null;
+        }
+
+        static XElement _TagPrototype;
+        public override XElement TagPrototype
+        {
+            get
+            {
+                if (_TagPrototype == null)
+                {
+
+                    _TagPrototype = new XElement(Tag.TagName);
+                    _TagPrototype.Add(new XAttribute(Tag.RendererAttributeName, this.GetType().Name));
+                }
+                return _TagPrototype;
+            }
+        }
+
+        private Type _OptionType;
+        public override Type OptionType {
+            get
+            {
+                _OptionType = _OptionType ?? typeof (PropertyNamesOptionAttribute);
+                return _OptionType;
+            }
         }
     }
 }

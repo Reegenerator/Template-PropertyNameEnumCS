@@ -2,7 +2,7 @@
 
 using EnvDTE;
 
-namespace ReegeneratorCollection.Extensions
+namespace RgenLib.Extensions
 {
 	public static class TextPoint
 	{
