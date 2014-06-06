@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<RgenDependencies xmlns="http://www.reegenerator.com/RgenDependenciesSchema.xsd">
+<!-- dependencies sample. The associated schema is located in %ProgramFiles%\Kodeo Limited\Reegenerator <version>\RgenDependenciesSchema.xsd
+   The file must be located in the solution's root folder.
+  <DependencyProjectItem Path="$(SolutionDir)\Project\aaa.xml">
+    <DependsOn Path="xxx.xml"/>
+    <DependsOn Path="$(ProjectDir)\yyy.cs" />
+  </DependencyProjectItem>
+
+  <DependencyProjectItem Path="$(SolutionDir)\Project\bbb.xml">
+    <DependsOn Path="$(SolutionDir)\ppp.xml"/>
+  </DependencyProjectItem>
+-->
+</RgenDependencies>
