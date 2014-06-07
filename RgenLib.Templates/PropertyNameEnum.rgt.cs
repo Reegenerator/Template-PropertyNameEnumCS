@@ -49,10 +49,10 @@ namespace RgenLib.Templates {
             writer.InsertOrReplace();
 
         }
-
+        public string ClassName { get; set; }
         public override RenderResults Render()
         {
-            var cls = RgenLib.Extensions.ElementAtCursor.GetClassAtCursor(ProjectItem.DteObject.DTE);
+            var cls = GetClassAtCursor();
             if (cls == null) {
                 MessageBox.Show("No class found at cursor");
             }
@@ -64,7 +64,17 @@ namespace RgenLib.Templates {
             return null;
         }
 
-        
+        private CodeClass2 GetClassAtCursor()
+        {
+            ClassName = "PropertyNames";
+            var cls = RgenLib.Extensions.ElementAtCursor.GetClassAtCursor(ProjectItem.DteObject.DTE);
+            //if we are inside the generated class, use the parent class instead
+            if (cls.Name == ClassName)
+            {
+                cls =(CodeClass2) cls.Parent;
+            }
+            return cls;
+        }
 
         private Type _OptionType;
         public override Type OptionAttributeType {

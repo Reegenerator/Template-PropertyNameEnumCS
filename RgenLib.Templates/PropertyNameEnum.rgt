@@ -10,7 +10,7 @@
 <%@ Method Name="GenEnum" DefineOutputParameter="true" %>
 <%@ Parameter Name="PropertyInfos" Type="PropertyInfo[]" %>
 <%@ Parameter Name="AsInnerClass" Type="bool"  %>
-public static class PropertyNames {
+public static class <%=ClassName%> {
 <% 	foreach(var prop in PropertyInfos) { %>
 	public const <%= prop.PropertyType.ToString()  %> <%= prop.Name %> = "<%= prop.Name %>";
 <% } %>
