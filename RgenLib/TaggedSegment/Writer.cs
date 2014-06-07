@@ -22,7 +22,7 @@ namespace RgenLib.TaggedSegment {
             private readonly Manager<T> _Manager;
 
             public Manager<T> Manager { get { return _Manager; } }
-            public OptionTag Tag { get; set; }
+            public OptionTag OptionTag { get; set; }
 
             public Writer(Manager<T> manager) {
                 _Manager = manager;
@@ -42,7 +42,7 @@ namespace RgenLib.TaggedSegment {
                 Class = parentWriter.Class;
                 TriggeringBaseClass = parentWriter.TriggeringBaseClass;
                 //Clone instead of reusing parent's attribute, because they may have different property values
-                Tag = (OptionTag)parentWriter.Tag.MemberwiseClone();
+                OptionTag = (OptionTag)parentWriter.OptionTag.MemberwiseClone();
                 Category = segCategory;
             }
 
@@ -58,7 +58,10 @@ namespace RgenLib.TaggedSegment {
             public Types SegmentType { get; set; }
             public string Content { get; set; }
             public string ProcessedContent { get; set; }
-            public string TagComment { get; set; }
+            /// <summary>
+            /// Additional note placed before the actual xml
+            /// </summary>
+            public string TagNote { get; set; }
             private bool _OpenFileOnGenerated = true;
             public bool OpenFileOnGenerated {
                 get {
@@ -112,32 +115,30 @@ namespace RgenLib.TaggedSegment {
                 return InsertedEnd;
             }
 
-            #region Tag Generation //!――――――――――――――――――――――――――――――――――――――――――――――――――――――
+            #region Tag Generation 
 
+ 
             public XElement GenXmlTag() {
                 //set to null if it's default, so it doesn't need to be written in the tag
                 var triggerType = IsTriggeredByBaseClass ? (TriggerTypes?)TriggerTypes.BaseClassAttribute : null;
                 var triggerInfo = (triggerType == TriggerTypes.BaseClassAttribute) ? TriggeringBaseClass.Name : null;
 
-                var xml = new XElement(_Manager.Renderer.TagPrototype);
+                var xml = new XElement(Manager<T>.Tag.TagPrototype);
                 if (triggerType != null) {
                     xml.SetAttributeValue("Trigger", triggerType.ToString());
                 }
                 if (triggerInfo != null) {
                     xml.SetAttributeValue("TriggerInfo", triggerInfo);
                 }
-             
-                xml.SetAttributeValue("Date", DateTime.Now.ToString(CultureInfo.InvariantCulture));
 
-                var xmlNameType = typeof(XmlAttributeAttribute);
-                //var membersWithXmlName = _Manager.Renderer.OptionAttributeTypeCache.GetMembers()
-                //    .Select(m => new { Member = m, XmlName = m.GetCustomAttributes<XmlAttributeAttribute>().FirstOrDefault() })
-                //    .Where(x => x.XmlName != null);
+                xml.SetAttributeValue(GeneratedSegment.GenerateDateXmlName, DateTime.Now.ToString(Settings.TagDateFormat, Settings.TagDateCulture));
 
-                foreach (var keyValuePair in Manager.GetXmlAttributes()) {
+            
+     
+                foreach (var keyValuePair in XmlAttributeAttribute.GetXmlProperties(typeof(Tag))) {
 
-                    var propValue = keyValuePair.Value.GetValue(Tag);
-                    //only write the xml attribute if it has value, to keep the tag concise
+                    var propValue = keyValuePair.Value.GetValue(OptionTag);
+                    //only write the xml attribute if it has a value, to keep the tag concise
                     if (propValue != null) {
                         xml.Add(new XAttribute(keyValuePair.Key, propValue));
                     }
@@ -156,7 +157,7 @@ namespace RgenLib.TaggedSegment {
             public string CreateTaggedRegionName() {
                 var xml = GenXmlTag();
                 var regionNameXml = XmlWriter.ToRegionNameString(xml);
-                return TagComment.Conjoin("\t", regionNameXml);
+                return TagNote.Conjoin("\t", regionNameXml);
             }
 
             public string GenTaggedRegionText() {
@@ -177,7 +178,7 @@ namespace RgenLib.TaggedSegment {
 
 
 
-            #endregion //!―――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――
+            #endregion 
 
 
             /// <summary>
@@ -186,7 +187,7 @@ namespace RgenLib.TaggedSegment {
             /// <returns></returns>
             /// <remarks></remarks>
             public bool InsertOrReplace() {
-                var generatedSegments = Manager.FindExistingSegments(this);
+                var generatedSegments = GeneratedSegment.Find(this);
                 var needInsert = false;
                 if (generatedSegments.Length == 0) {
                     //if none found, then insert
@@ -196,7 +197,7 @@ namespace RgenLib.TaggedSegment {
                     //if any is outdated, delete, and reinsert
                     foreach (var t in
                         from t1 in generatedSegments
-                        where t1.IsOutdated(Tag)
+                        where t1.IsOutdated(OptionTag)
                         select t1) {
 
                         t.Range.DeleteText();

@@ -91,7 +91,7 @@ namespace RgenLib.Extensions
 			}
 			catch (Exception ex)
 			{
-				MessageBox.Show(ex.ToString());
+			    Debug.DebugHere();
 			}
 		}
 #endregion

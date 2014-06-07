@@ -7,8 +7,8 @@ using Kodeo.Reegenerator.Wrappers;
 using RgenLib.Attributes;
 using RgenLib.Extensions;
 using RgenLib.TaggedSegment;
-
-namespace RgenLib {
+using ManagerType = RgenLib.TaggedSegment.Manager<RgenLib.Templates.PropertyNameEnum>;
+namespace RgenLib.Templates {
     using System;
     using System.Linq;
     using System.Collections.Generic;
@@ -27,10 +27,10 @@ namespace RgenLib {
         }
 
         public PropertyNameEnum() {
-            Manager = new Manager<PropertyNameEnum>(this);
+            Manager = new ManagerType(this);
         }
 
-        private Manager<PropertyNameEnum> Manager;
+        private ManagerType Manager;
         public void WritePropertyNames(CodeClass2 cls)
         {
           
@@ -43,15 +43,16 @@ namespace RgenLib {
             writer.Class = cls;
             writer.SearchStart = cls.StartPoint;
             writer.SearchEnd = cls.EndPoint;
-            writer.Tag = new OptionTag() {RegenMode = RegenModes.Always};
+            writer.OptionTag = new ManagerType.OptionTag() { RegenMode = RegenModes.Always };
             writer.Content = output.ToString();
             writer.InsertStart =cls.GetStartPoint(vsCMPart.vsCMPartBody);
             writer.InsertOrReplace();
 
         }
 
-        public override RenderResults Render() {
-            var cls = Extensions.ElementAtCursor.GetClassAtCursor(ProjectItem.DteObject.DTE);
+        public override RenderResults Render()
+        {
+            var cls = RgenLib.Extensions.ElementAtCursor.GetClassAtCursor(ProjectItem.DteObject.DTE);
             if (cls == null) {
                 MessageBox.Show("No class found at cursor");
             }
@@ -63,20 +64,7 @@ namespace RgenLib {
             return null;
         }
 
-        static XElement _TagPrototype;
-        public override XElement TagPrototype
-        {
-            get
-            {
-                if (_TagPrototype == null)
-                {
-
-                    _TagPrototype = new XElement(Tag.TagName);
-                    _TagPrototype.Add(new XAttribute(Tag.RendererAttributeName, this.GetType().Name));
-                }
-                return _TagPrototype;
-            }
-        }
+        
 
         private Type _OptionType;
         public override Type OptionAttributeType {

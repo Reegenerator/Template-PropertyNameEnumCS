@@ -32,7 +32,8 @@ namespace RgenLib.TaggedSegment {
 
 
     public enum RegenModes {
-        OnVersionChanged,
+        Default,
+        OnVersionChanged = Default,
         Once,
         Always
     }

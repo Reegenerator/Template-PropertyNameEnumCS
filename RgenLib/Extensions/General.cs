@@ -21,7 +21,7 @@ using Solution = Kodeo.Reegenerator.Wrappers.Solution;
 
 namespace RgenLib.Extensions
 {
-	internal static class General
+	public static class General
 	{
 		public const RegexOptions DefaultRegexOption = RegexOptions.Compiled | RegexOptions.IgnoreCase | RegexOptions.IgnorePatternWhitespace | RegexOptions.Singleline;
 
@@ -240,7 +240,7 @@ namespace RgenLib.Extensions
 			catch (Exception ex)
 			{
 
-				MessageBox.Show(ex.ToString());
+			    Debug.DebugHere();
 			}
 			return null;
 		}

@@ -1,4 +1,4 @@
-<%@ Template Language="C#" ParentClass="TaggedCodeRenderer"
+<%@ Template Language="C#" ParentClass="RgenLib.TaggedCodeRenderer"
             ClassName="PropertyNameEnum" 
             DisplayName="PropertyNameEnum" 
             Description="PropertyNameEnum" %>
@@ -10,8 +10,6 @@
 <%@ Method Name="GenEnum" DefineOutputParameter="true" %>
 <%@ Parameter Name="PropertyInfos" Type="PropertyInfo[]" %>
 <%@ Parameter Name="AsInnerClass" Type="bool"  %>
-
-
 public static class PropertyNames {
 <% 	foreach(var prop in PropertyInfos) { %>
 	public const <%= prop.PropertyType.ToString()  %> <%= prop.Name %> = "<%= prop.Name %>";

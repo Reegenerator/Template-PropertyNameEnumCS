@@ -74,13 +74,6 @@
     <Compile Include="Extensions\ElementAtCursor.cs" />
     <Compile Include="Extensions\General.cs" />
     <Compile Include="Extensions\ProjectAndSolution.cs" />
-    <Compile Include="PropertyNameEnum.Designer.cs">
-      <AutoGen>True</AutoGen>
-      <DependentUpon>PropertyNameEnum.rgt</DependentUpon>
-    </Compile>
-    <Compile Include="PropertyNameEnum.rgt.cs">
-      <DependentUpon>PropertyNameEnum.rgt</DependentUpon>
-    </Compile>
     <Compile Include="ReflectionUtils.cs" />
     <Compile Include="Extensions\String.cs" />
     <Compile Include="Extensions\TextPoint.cs" />
@@ -88,6 +81,7 @@
     <Compile Include="TaggedCodeRenderer.cs" />
     <Compile Include="TaggedSegment\GeneratedSegment.cs" />
     <Compile Include="TaggedSegment\OptionTag.cs" />
+    <Compile Include="TaggedSegment\Settings.cs" />
     <Compile Include="TaggedSegment\Tag.cs" />
     <Compile Include="TaggedSegment\Manager.cs" />
     <Compile Include="TaggedSegment\TextRange.cs" />
@@ -100,10 +94,6 @@
   <ItemGroup>
     <None Include="Kodeo.Reegenerator.dll" />
     <None Include="packages.config" />
-    <None Include="PropertyNameEnum.rgt">
-      <Generator>RgenTemplate</Generator>
-      <LastGenOutput>PropertyNameEnum.Designer.cs</LastGenOutput>
-    </None>
   </ItemGroup>
   <ItemGroup>
     <None Include="Kodeo.Reegenerator.xml" />
@@ -131,7 +121,7 @@
     </BootstrapperPackage>
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\ReegeneratorCollecton.Attributes\RgenLib.Attributes.csproj">
+    <ProjectReference Include="..\RgenLib.Attributes\RgenLib.Attributes.csproj">
       <Project>{07c4ae0f-b6a5-45fc-982c-e4ec2c0b6661}</Project>
       <Name>RgenLib.Attributes</Name>
     </ProjectReference>

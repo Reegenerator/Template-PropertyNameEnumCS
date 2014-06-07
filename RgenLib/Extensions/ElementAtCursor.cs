@@ -30,8 +30,9 @@ namespace RgenLib.Extensions {
                 //}
                 return objCodeElement;
             }
-            catch (Exception ex) {
-                MessageBox.Show(ex.ToString());
+            catch (Exception ex)
+            {
+                Debug.DebugHere();
             }
             return null;
         }
