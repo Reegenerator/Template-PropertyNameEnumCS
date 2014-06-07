@@ -49,6 +49,17 @@ namespace RgenLib {
 
         }
 
+        void AddOrReplaceMemberWithQualifiedName(MemberInfo m)
+        {
+            var dict = _publicInstanceMembers;
+            System.Diagnostics.Debug.Assert(m.DeclaringType != null, "m.DeclaringType != null");
+            if (dict.ContainsKey(m.Name))
+            {
+                dict.Remove(m.Name);
+            }
+            dict.Add(m.DeclaringType.Name + "." + m.Name, m);
+        }
+
 
         public TypeCache(Type type, bool caseSensitiveMembers = true) {
             var comparer = caseSensitiveMembers ? StringComparer.Ordinal : StringComparer.OrdinalIgnoreCase;
@@ -56,13 +67,33 @@ namespace RgenLib {
             _publicInstanceProperties = new Dictionary<string, PropertyInfo>();
             try {
                 TypeInfo = type.GetTypeInfo();
-                foreach (var m in TypeInfo.GetMembers(BindingFlags.Instance | BindingFlags.Public)) {
+                foreach (var m in TypeInfo.GetMembers(BindingFlags.Instance | BindingFlags.Public )) {
+                    //Handle member with the same name (overridden members)
+                    MemberInfo existingMemberWithSameName;
+                    if (_publicInstanceMembers.TryGetValue(m.Name, out existingMemberWithSameName))
+                    {
+                        System.Diagnostics.Debug.Assert(existingMemberWithSameName.DeclaringType != null, "existingMemberWithSameName.DeclaringType != null");
+                        System.Diagnostics.Debug.Assert(m.DeclaringType != null, "m.DeclaringType != null");
+                        if (m.DeclaringType.IsSubclassOf(existingMemberWithSameName.DeclaringType))
+                        {
+                            //the overriding member takes precedent 
+                            //add declaring typename to existing
+                            AddOrReplaceMemberWithQualifiedName(existingMemberWithSameName);
+                        }
+                        else
+                        {
+                            //keep the existing member
+                            AddOrReplaceMemberWithQualifiedName(m);
+                            continue;
+                        }
+                    }
+
                     _publicInstanceMembers.Add(m.Name, m);
                     var info = m as PropertyInfo;
                     if (info != null) { _publicInstanceProperties.Add(info.Name, info); }
                 }
             }
-            catch (Exception) {
+            catch (Exception ex) {
                 Extensions.Debug.DebugHere();
             }
         }

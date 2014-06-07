@@ -31,14 +31,22 @@ namespace RgenLib {
         }
 
         private Manager<PropertyNameEnum> Manager;
-        public void WritePropertyNames(CodeClass2 cls) {
+        public void WritePropertyNames(CodeClass2 cls)
+        {
+          
+
             var props = cls.GetProperties().Select(p => p.ToPropertyInfo()).ToArray();
             var output = new System.IO.StringWriter();
             GenEnum(output, props, true);
-            var code = output.ToString();
 
-            var start = cls.GetStartPoint(vsCMPart.vsCMPartBody);
-            start.CreateEditPoint().InsertAndFormat(code);
+            var writer = Manager.CreateWriter() ;
+            writer.Class = cls;
+            writer.SearchStart = cls.StartPoint;
+            writer.SearchEnd = cls.EndPoint;
+            writer.Tag = new OptionTag() {RegenMode = RegenModes.Always};
+            writer.Content = output.ToString();
+            writer.InsertStart =cls.GetStartPoint(vsCMPart.vsCMPartBody);
+            writer.InsertOrReplace();
 
         }
 
@@ -71,7 +79,7 @@ namespace RgenLib {
         }
 
         private Type _OptionType;
-        public override Type OptionType {
+        public override Type OptionAttributeType {
             get
             {
                 _OptionType = _OptionType ?? typeof (PropertyNamesOptionAttribute);

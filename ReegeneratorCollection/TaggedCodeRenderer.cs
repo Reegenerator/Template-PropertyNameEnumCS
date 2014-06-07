@@ -15,7 +15,7 @@ namespace RgenLib {
         /// <summary>
         /// Add this attribute to mark target code elements for code generation. Also to specify options for the generation.
         /// </summary>
-        public abstract Type OptionType { get; }
+        public abstract Type OptionAttributeType { get; }
 
     }
 }

@@ -12,15 +12,13 @@ using TextPoint = EnvDTE.TextPoint;
 using System.Reflection;
 
 namespace RgenLib.TaggedSegment {
-    public partial class Manager<T> where T : TaggedCodeRenderer, new()
-    {
+    public partial class Manager<T> where T : TaggedCodeRenderer, new() {
 
         /// <summary>
         /// Holds information required to generate code segments
         /// </summary>
         /// <remarks></remarks>
-        public class Writer
-        {
+        public class Writer {
             private readonly Manager<T> _Manager;
 
             public Manager<T> Manager { get { return _Manager; } }
@@ -28,9 +26,9 @@ namespace RgenLib.TaggedSegment {
 
             public Writer(Manager<T> manager) {
                 _Manager = manager;
-               
+
             }
-            
+
 
             /// <summary>
             /// Create a new writer with the same Class, TriggeringBaseClass and GeneratorAttribute
@@ -44,12 +42,12 @@ namespace RgenLib.TaggedSegment {
                 Class = parentWriter.Class;
                 TriggeringBaseClass = parentWriter.TriggeringBaseClass;
                 //Clone instead of reusing parent's attribute, because they may have different property values
-                Tag =(OptionTag) parentWriter.Tag.MemberwiseClone();
+                Tag = (OptionTag)parentWriter.Tag.MemberwiseClone();
                 Category = segCategory;
             }
 
-            
-            public string Category {get;set;}
+
+            public string Category { get; set; }
             public CodeClass2 TriggeringBaseClass { get; set; }
             public CodeClass2 Class { get; set; }
             //public T Renderer { get; set; }
@@ -128,6 +126,7 @@ namespace RgenLib.TaggedSegment {
                 if (triggerInfo != null) {
                     xml.SetAttributeValue("TriggerInfo", triggerInfo);
                 }
+             
                 xml.SetAttributeValue("Date", DateTime.Now.ToString(CultureInfo.InvariantCulture));
 
                 var xmlNameType = typeof(XmlAttributeAttribute);
@@ -179,6 +178,44 @@ namespace RgenLib.TaggedSegment {
 
 
             #endregion //!―――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――
+
+
+            /// <summary>
+            /// Insert or Replace text in taggedRange if outdated (or set to always generate)
+            /// </summary>
+            /// <returns></returns>
+            /// <remarks></remarks>
+            public bool InsertOrReplace() {
+                var generatedSegments = Manager.FindExistingSegments(this);
+                var needInsert = false;
+                if (generatedSegments.Length == 0) {
+                    //if none found, then insert
+                    needInsert = true;
+                }
+                else {
+                    //if any is outdated, delete, and reinsert
+                    foreach (var t in
+                        from t1 in generatedSegments
+                        where t1.IsOutdated(Tag)
+                        select t1) {
+
+                        t.Range.DeleteText();
+                        needInsert = true;
+                    }
+                }
+                if (!needInsert) {
+                    return false;
+                }
+
+                InsertAndFormat();
+                //!Open file if requested
+                if (OpenFileOnGenerated && Class != null) {
+                    if (!Class.ProjectItem.IsOpen) {
+                        Class.ProjectItem.Open();
+                    }
+                }
+                return true;
+            }
 
         }
 

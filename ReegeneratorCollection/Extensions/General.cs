@@ -33,7 +33,7 @@ namespace RgenLib.Extensions
 		private static readonly Regex GetInterfaceImplementation_regex = new Regex(InterfaceImplementationPattern, DefaultRegexOption);
 		private static readonly Regex RemoveEmptyLines_regex = new Regex("^\\s+$[\\r\\n]*", RegexOptions.Multiline);
 		private static readonly Dictionary<string, Assembly> GetTypeFromProject_cache = new Dictionary<string, Assembly>();
-		private static readonly ConcurrentDictionary<CodeClass, Type> ToPropertyInfo_classCache = new ConcurrentDictionary<CodeClass, Type>();
+		//private static readonly ConcurrentDictionary<CodeClass, Type> ToPropertyInfo_classCache = new ConcurrentDictionary<CodeClass, Type>();
 		private static readonly Type GetGeneratorAttribute_type = typeof(GeneratorOptionAttribute);
 
 		public static IEnumerable<CodeClass2> GetClassesEx(this ProjectItem item)
@@ -527,8 +527,7 @@ namespace RgenLib.Extensions
 		/// <remarks></remarks>
 		public static Type GetTypeFromProject(this EnvDTE.ProjectItem pi, string typeName)
 		{
-//INSTANT C# NOTE: VB local static variable moved to class level:
-//			Static cache As new Dictionary(Of String, Assembly)
+
 			var path = pi.GetAssemblyPath();
 			if (!(GetTypeFromProject_cache.ContainsKey(path)))
 			{
@@ -536,7 +535,14 @@ namespace RgenLib.Extensions
 			}
 
 			var asm = GetTypeFromProject_cache[path];
-			return asm.GetType(typeName);
+			var type= asm.GetType(typeName);
+	        if (type == null)
+	        {
+	            throw new Exception(
+	                string.Format("Type {0} not found in assembly {1} at {2}. You may need to rebuild the assembly.",
+	                    typeName, asm.FullName, path));
+	        }
+            return type;
 		}
 		public static Type ToType(this CodeClass cc)
 		{
@@ -551,10 +557,9 @@ namespace RgenLib.Extensions
 		/// <remarks></remarks>
 		public static PropertyInfo ToPropertyInfo(this CodeProperty2 prop)
 		{
-
-
-            var classType = ToPropertyInfo_classCache.GetOrAdd(prop.Parent, x => prop.Parent.ToType());
-			return classType.GetProperty(prop.Name, BindingFlags.DeclaredOnly | BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic);
+		    var t = prop.Parent.ToType();
+            var classType = TypeResolver.ByType(t );
+			return classType.TypeInfo.GetProperty(prop.Name, BindingFlags.DeclaredOnly | BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic);
 		}
 
 	    public static bool HasAttribute<T>(this MemberInfo mi) where T : Attribute

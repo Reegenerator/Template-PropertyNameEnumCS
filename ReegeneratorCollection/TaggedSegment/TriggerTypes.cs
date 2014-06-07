@@ -19,7 +19,11 @@ namespace RgenLib.TaggedSegment {
         /// Code generation is triggered because the baseClass is marked with a GeneratorAttribute
         /// </summary>
         /// <remarks></remarks>
-        BaseClassAttribute
+        BaseClassAttribute,
+        /// <summary>
+        /// Code generation was triggered by calling it as Reegenerator CodeSnippet
+        /// </summary>
+        CodeSnippet
     }
     public enum TagTypes {
         Generated,

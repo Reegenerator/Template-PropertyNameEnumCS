@@ -3,6 +3,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Linq.Expressions;
 using System.Reflection;
 using System.Text.RegularExpressions;
 using System.Xml.Linq;
@@ -15,22 +16,24 @@ namespace RgenLib.TaggedSegment {
     /// Parse and generate code wrapped with xml information, so it can be easily found and replaced 
     /// </summary>
     /// <remarks></remarks>
-    public partial class Manager<T> where T : TaggedCodeRenderer, new()
-    {
+    public partial class Manager<T> where T : TaggedCodeRenderer, new() {
 
         public Manager(T renderer) {
             _Renderer = renderer;
+            _propertyToXml = XmlAttributeAttribute.GetPropertyToXmlAttributeTranslation(_Renderer.OptionAttributeType);
+
             Init();
-            InitXmlAttributesByType();
 
         }
-
+        private readonly Dictionary<string, string> _propertyToXml;
         private readonly T _Renderer;
         public T Renderer {
             get { return _Renderer; }
         }
 
-
+        public Writer CreateWriter() {
+            return new Writer(this);
+        }
 
         #region Regex
         public const string RegionBeginKeyword = "#region";
@@ -90,8 +93,9 @@ namespace RgenLib.TaggedSegment {
             var regPattern = string.Format(regionPatternFormat, tagName, rendererAttr.Name, rendererAttr.Value, RegionBeginKeyword, RegionEndKeyword);
             _RegionRegex = new Regex(regPattern, General.DefaultRegexOption);
 
+
         }
-     
+
         private Regex GetRegexByType(Types segmentType) {
             switch (segmentType) {
                 case Types.Region:
@@ -137,7 +141,7 @@ namespace RgenLib.TaggedSegment {
 
             return FindSegments(writer, TagTypes.InsertPoint).FirstOrDefault();
         }
-        public GeneratedSegment[] FindGeneratedSegments(Writer writer) {
+        public GeneratedSegment[] FindExistingSegments(Writer writer) {
 
             return FindSegments(writer, TagTypes.Generated).Where(x => x.Category == writer.Tag.Category).ToArray();
 
@@ -176,8 +180,7 @@ namespace RgenLib.TaggedSegment {
                 }
 
                 var range = new TextRange(matchStart, matchEnd);
-                if (range.IsValid)
-                {
+                if (range.IsValid) {
                     var tag = ParseTextRange(range);
                     segments.Add(tag);
                 }
@@ -185,47 +188,12 @@ namespace RgenLib.TaggedSegment {
             return segments.ToArray();
         }
         public bool IsAnyOutdated(Writer info) {
-            var segments = FindGeneratedSegments(info);
+            var segments = FindExistingSegments(info);
             return !segments.Any() || segments.Any(x => x.IsOutdated(info.Tag));
         }
 
 
-        /// <summary>
-        /// Insert or Replace text in taggedRange if outdated (or set to always generate)
-        /// </summary>
-        /// <returns></returns>
-        /// <remarks></remarks>
-        public bool InsertOrReplace(Writer info) {
-            var generatedSegments = FindGeneratedSegments(info);
-            var needInsert = false;
-            if (generatedSegments.Length == 0) {
-                //if none found, then insert
-                needInsert = true;
-            }
-            else {
-                //if any is outdated, delete, and reinsert
-                foreach (var t in
-                    from t1 in generatedSegments
-                    where t1.IsOutdated(info.Tag)
-                    select t1) {
 
-                    t.Range.DeleteText();
-                    needInsert = true;
-                }
-            }
-            if (!needInsert) {
-                return false;
-            }
-
-            info.InsertAndFormat();
-            //!Open file if requested
-            if (info.OpenFileOnGenerated && info.Class != null) {
-                if (!info.Class.ProjectItem.IsOpen) {
-                    info.Class.ProjectItem.Open();
-                }
-            }
-            return true;
-        }
         public void Remove(Writer info) {
             var taggedRanges = FindSegments(info);
             foreach (var t in taggedRanges) {
@@ -236,32 +204,10 @@ namespace RgenLib.TaggedSegment {
 
 
         public TypeCache OptionAttributeTypeCache {
-            get { return TypeResolver.ByType(_Renderer.OptionType); }
+            get { return TypeResolver.ByType(_Renderer.OptionAttributeType); }
         }
 
-
-        public void InitXmlAttributesByType() {
-            var typeCache = TypeResolver.ByType(_Renderer.OptionType);
-            //Store members with XmlAttributeAttribute into a dictionary, to be used when writing the xml
-            if (!(XmlAttributesByType.ContainsKey(_Renderer.OptionType))) {
-                var xmlmembers = new Dictionary<string, PropertyInfo>();
-                var members = typeCache.GetMembers().ToArray();
-                foreach (var m in members) {
-                    var xmlName = m.GetCustomAttribute<XmlAttributeAttribute>();
-                    if (xmlName == null) { continue; }
-                    xmlmembers.Add(xmlName.Name, (PropertyInfo)typeCache[m.Name]);
-                }
-                XmlAttributesByType.Add(_Renderer.OptionType, xmlmembers);
-            }
-        }
-
-        public static Dictionary<Type, Dictionary<string, PropertyInfo>> XmlAttributesByType { get; set; }
-        /// <summary>
-        /// Get all properties marked with <see cref="XmlAttributeAttribute"/>  on it
-        /// </summary>
-        public Dictionary<string, PropertyInfo> GetXmlAttributes() {
-            return XmlAttributesByType[_Renderer.OptionType];
-        }
+      
 
 
         /// <summary>
@@ -271,8 +217,8 @@ namespace RgenLib.TaggedSegment {
         /// <param name="value"></param>
         /// <remarks>
         /// Attribute argument is presented exactly as it was typed
-        /// Ex: SomeArg:="Test" would result in the Argument.Value "Test" (with quote)
-        /// Ex: SomeArg:=("Test") would result in the Argument.Value ("Test") (with parentheses and quote)
+        /// Ex: SomeArg="Test" would result in the Argument.Value "Test" (with quote)
+        /// Ex: SomeArg=("Test") would result in the Argument.Value ("Test") (with parentheses and quote)
         /// </remarks>
         private string ParseXmlAttributeValue(PropertyInfo propInfo, string value) {
             string stringValue = null;
@@ -291,7 +237,7 @@ namespace RgenLib.TaggedSegment {
             return stringValue;
         }
 
-    
+
 
         /// <summary>
         /// Extract valid xml inside Region Name and within inline comment
@@ -301,7 +247,7 @@ namespace RgenLib.TaggedSegment {
         /// </remarks>
         public XElement ExtractXml(TextRange range) {
             var firstline = range.StartPoint.CreateEditPoint().GetLineText();
-           var segmentType = firstline.Trim().StartsWith(RegionBeginKeyword) ? Types.Region : Types.Statements;
+            var segmentType = firstline.Trim().StartsWith(RegionBeginKeyword) ? Types.Region : Types.Statements;
             var text = range.GetText();
             var xmlContent = "";
             switch (segmentType) {
@@ -316,22 +262,31 @@ namespace RgenLib.TaggedSegment {
             return XDocument.Parse(xmlContent).Root;
         }
         private GeneratedSegment ParseTextRange(TextRange range) {
+            string name;
+            try {
+                var tag = new GeneratedSegment(range);
+                var xmlProps = XmlAttributeAttribute.GetXmlProperties(_Renderer.OptionAttributeType);
+                var xTag = ExtractXml(range);
+                foreach (var attr in xTag.Attributes()) {
+                    name = attr.Name.LocalName;
 
-            var tag = new GeneratedSegment(range);
-            var xmlProps = GetXmlAttributes();
-            var xTag = ExtractXml(range);
-            foreach (var attr in xTag.Attributes()) {
-                var name = attr.Name.LocalName;
+                    //skip renderer name
+                    if (name == Tag.RendererAttributeName) {
+                        continue;
+                    }
 
-                //if (name == "Renderer") {
-                //    continue;
-                //}
+                    var prop = xmlProps[name];
+                    prop.SetValue(tag, ParseXmlAttributeValue(prop, attr.Value));
 
-                var prop = xmlProps[name];
-                prop.SetValue(tag, ParseXmlAttributeValue(prop, attr.Value));
-
+                }
+                return tag;
             }
-            return tag;
+            catch (Exception ex) {
+
+                Debug.DebugHere();
+                throw;
+            }
+
         }
     }
 }

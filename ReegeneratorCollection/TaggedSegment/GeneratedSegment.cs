@@ -10,14 +10,19 @@ namespace RgenLib.TaggedSegment {
     public class GeneratedSegment : Tag {
 
         private static readonly PropertyInfo[] _properties;
+        public static readonly string GenerateDateXmlName;
         static GeneratedSegment() {
             _properties = TypeResolver.ByType(typeof(GeneratedSegment)).GetProperties().ToArray();
-
+             var typeDict == XmlAttributeAttribute.GetPropertyToXmlAttributeTranslation()
+           
         }
+
+
 
         private readonly TextRange _range;
         [IgnorePropertyInComparison]
         public TextRange Range { get { return _range; } }
+        [XmlAttribute("Date")]
         public DateTime? GenerateDate { get; set; }
         public GeneratedSegment(TextRange range) {
             _range = range;
@@ -42,6 +47,11 @@ namespace RgenLib.TaggedSegment {
             return _properties.Where(p2 => !p2.HasAttribute<IgnorePropertyInComparisonAttribute>())
                         .ToDictionary(p => p.Name, p => p.GetValue(this));
 
+        }
+
+        public static string GetGenerateDateAttributeName()
+        {
+            
         }
     }
 }
