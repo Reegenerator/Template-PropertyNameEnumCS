@@ -26,8 +26,12 @@ namespace RgenLib.Templates {
             // var projectItem = base.ProjectItem;
         }
 
+        static PropertyNameEnum() {
+            _version = new Version(1, 0, 0);
+        }
+
         public PropertyNameEnum() {
-            Manager = new ManagerType(this);
+            Manager = new ManagerType(this, TagFormat.Json);
         }
 
         private ManagerType Manager;
@@ -43,7 +47,7 @@ namespace RgenLib.Templates {
             writer.Class = cls;
             writer.SearchStart = cls.StartPoint;
             writer.SearchEnd = cls.EndPoint;
-            writer.OptionTag = new ManagerType.OptionTag() { RegenMode = RegenModes.Always };
+            writer.OptionTag = new ManagerType.OptionTag() { Version = Version, RegenMode = RegenModes.Always };
             writer.Content = output.ToString();
             writer.InsertStart =cls.GetStartPoint(vsCMPart.vsCMPartBody);
             writer.InsertOrReplace();
@@ -67,7 +71,7 @@ namespace RgenLib.Templates {
         private CodeClass2 GetClassAtCursor()
         {
             ClassName = "PropertyNames";
-            var cls = RgenLib.Extensions.ElementAtCursor.GetClassAtCursor(ProjectItem.DteObject.DTE);
+            var cls =ElementAtCursor.GetClassAtCursor(ProjectItem.DteObject.DTE);
             //if we are inside the generated class, use the parent class instead
             if (cls.Name == ClassName)
             {

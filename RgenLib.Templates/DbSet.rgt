@@ -1,0 +1,8 @@
+<%@ Template Language="C#" 
+            ClassName="DbSet" 
+            DisplayName="DbSet" 
+            Description="DbSet" %>
+<%@ Import Namespace="System" %>
+<%@ Import Namespace="System.Linq" %>
+<%@ Import Namespace="System.Collections.Generic" %>
+

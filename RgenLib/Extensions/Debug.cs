@@ -1,10 +1,10 @@
 ﻿//Formerly VB project-level imports:
 
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
-using EnvDTE;
 using Kodeo.Reegenerator.Generators;
 using Microsoft.VisualBasic;
 using Microsoft.VisualBasic.CompilerServices;
@@ -115,7 +115,7 @@ namespace RgenLib.Extensions {
         /// Launch debugger or Break if it's already attached
         /// </summary>
         /// <remarks></remarks>
-        public static void DebugHere() {
+        public static void DebugHere(Exception ex=null) {
             if (Debugger.IsAttached) {
                 Debugger.Break();
             }

@@ -18,9 +18,9 @@ namespace RgenLib.TaggedSegment
     /// What we need is a private function in XmlTextWriter, called WriteEndStartTag
     /// </remarks>
 	public class XmlWriter : XmlTextWriter
-	{
-		public const string CodeCommentPrefix = "//";
-		public Types SegmentType {get; set;}
+    {
+        private const string CodeCommentPrefix = Constants.CodeCommentPrefix;
+        public Types SegmentType {get; set;}
 
 		//Property IsRegion As Boolean
 		public XmlWriter(StringWriter writer) : base(writer)

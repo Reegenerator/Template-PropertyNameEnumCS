@@ -12,6 +12,11 @@ EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "RgenLib", "RgenLib\RgenLib.csproj", "{FA884BB3-23D7-495C-A246-364FB3B2A478}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "RgenLib.Test", "RgenLib.Test\RgenLib.Test.csproj", "{C551FD34-0538-4362-8CE2-2DFC0CC20E85}"
+	ProjectSection(ProjectDependencies) = postProject
+		{A2E8570A-ADF1-40C8-A42A-9D5088F2ECB5} = {A2E8570A-ADF1-40C8-A42A-9D5088F2ECB5}
+		{07C4AE0F-B6A5-45FC-982C-E4EC2C0B6661} = {07C4AE0F-B6A5-45FC-982C-E4EC2C0B6661}
+		{FA884BB3-23D7-495C-A246-364FB3B2A478} = {FA884BB3-23D7-495C-A246-364FB3B2A478}
+	EndProjectSection
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "RgenLib.Attributes", "RgenLib.Attributes\RgenLib.Attributes.csproj", "{07C4AE0F-B6A5-45FC-982C-E4EC2C0B6661}"
 EndProject
@@ -36,6 +41,7 @@ Global
 		{07C4AE0F-B6A5-45FC-982C-E4EC2C0B6661}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{07C4AE0F-B6A5-45FC-982C-E4EC2C0B6661}.Release|Any CPU.Build.0 = Release|Any CPU
 		{A2E8570A-ADF1-40C8-A42A-9D5088F2ECB5}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{A2E8570A-ADF1-40C8-A42A-9D5088F2ECB5}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{A2E8570A-ADF1-40C8-A42A-9D5088F2ECB5}.Release|Any CPU.ActiveCfg = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution

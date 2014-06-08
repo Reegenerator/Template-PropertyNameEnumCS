@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace RgenLib.Test {
     class Person {
-        #region <Gen Renderer='PropertyNameEnum' Date='2014-06-07T14:14:51.426Z' Regen='Always' />
+        #region {Reegenerator:{Template:"PropertyNameEnum",Regen:Always,V:1.0.0,Date:"2014-06-08T22:33:57.7250991+08:00"}}
         public static class PropertyNames {
 
             public const System.String Name = "Name";
@@ -16,6 +16,13 @@ namespace RgenLib.Test {
         }
 
         #endregion
+       
+ 
+
+
+
+ 
+
         string Name { get; set; }
         string Address { get; set; }
     }

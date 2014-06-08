@@ -1,12 +1,5 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Reflection;
-using System.Text;
-using System.Threading.Tasks;
-using System.Xml.Linq;
 using Kodeo.Reegenerator.Generators;
-using RgenLib.Attributes;
 
 namespace RgenLib {
     public abstract class TaggedCodeRenderer : CodeRenderer {
@@ -16,5 +9,7 @@ namespace RgenLib {
         /// </summary>
         public abstract Type OptionAttributeType { get; }
 
+        protected static Version _version;
+        public Version Version { get { return _version; } }
     }
 }

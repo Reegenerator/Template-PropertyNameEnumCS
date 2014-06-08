@@ -1,9 +1,5 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using System.Windows.Forms;
 using EnvDTE;
 using EnvDTE80;
 
@@ -32,7 +28,7 @@ namespace RgenLib.Extensions {
             }
             catch (Exception ex)
             {
-                Debug.DebugHere();
+                Debug.DebugHere(ex);
             }
             return null;
         }
@@ -64,45 +60,40 @@ namespace RgenLib.Extensions {
 
 
             CodeElement objResultCodeElement = null;
-            CodeElements colCodeElementMembers = default(CodeElements);
-            CodeElement objMemberCodeElement = default(CodeElement);
 
 
-            if ((colCodeElements != null)) {
+            if (colCodeElements == null) return null;
+            foreach (var objCodeElement in colCodeElements.Cast<CodeElement>()) {
 
-                foreach (var objCodeElement in colCodeElements.Cast<CodeElement>()) {
-
-                    if (objCodeElement.StartPoint.GreaterThan(objTextPoint)) {
-                        // The code element starts beyond the point
+                if (objCodeElement.StartPoint.GreaterThan(objTextPoint)) {
+                    // The code element starts beyond the point
 
 
+                }
+                else if (objCodeElement.EndPoint.LessThan(objTextPoint)) {
+                    // The code element ends before the point
+
+                    // The code element contains the point
+                }
+                else {
+
+                    if (objCodeElement.Kind == eRequestedCodeElementKind) {
+                        // Found
+                        objResultCodeElement = objCodeElement;
                     }
-                    else if (objCodeElement.EndPoint.LessThan(objTextPoint)) {
-                        // The code element ends before the point
 
-                        // The code element contains the point
+                    // We enter in recursion, just in case there is an inner code element that also 
+                    // satisfies the conditions, for example, if we are searching a namespace or a class
+                    var colCodeElementMembers = GetCodeElementMembers(objCodeElement);
+
+                    var objMemberCodeElement = GetCodeElementAtTextPoint(eRequestedCodeElementKind, colCodeElementMembers, objTextPoint);
+
+                    if ((objMemberCodeElement != null)) {
+                        // A nested code element also satisfies the conditions
+                        objResultCodeElement = objMemberCodeElement;
                     }
-                    else {
 
-                        if (objCodeElement.Kind == eRequestedCodeElementKind) {
-                            // Found
-                            objResultCodeElement = objCodeElement;
-                        }
-
-                        // We enter in recursion, just in case there is an inner code element that also 
-                        // satisfies the conditions, for example, if we are searching a namespace or a class
-                        colCodeElementMembers = GetCodeElementMembers(objCodeElement);
-
-                        objMemberCodeElement = GetCodeElementAtTextPoint(eRequestedCodeElementKind, colCodeElementMembers, objTextPoint);
-
-                        if ((objMemberCodeElement != null)) {
-                            // A nested code element also satisfies the conditions
-                            objResultCodeElement = objMemberCodeElement;
-                        }
-
-                        break;
-
-                    }
+                    break;
 
                 }
 

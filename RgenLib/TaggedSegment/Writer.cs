@@ -1,15 +1,15 @@
 ﻿
 using System;
-using System.Globalization;
+using System.IO;
 using System.Text;
 using System.Linq;
 using System.Xml.Linq;
 using EnvDTE;
 using EnvDTE80;
+using Newtonsoft.Json;
 using RgenLib.Extensions;
-using RgenLib.Attributes;
+using RgenLib.TaggedSegment.Json;
 using TextPoint = EnvDTE.TextPoint;
-using System.Reflection;
 
 namespace RgenLib.TaggedSegment {
     public partial class Manager<T> where T : TaggedCodeRenderer, new() {
@@ -28,7 +28,6 @@ namespace RgenLib.TaggedSegment {
                 _Manager = manager;
 
             }
-
 
             /// <summary>
             /// Create a new writer with the same Class, TriggeringBaseClass and GeneratorAttribute
@@ -79,23 +78,12 @@ namespace RgenLib.TaggedSegment {
                 get { return _Status ?? (_Status = new StringBuilder()); }
             }
 
-            /// <summary>
-            /// True if the code generation was triggered by the base of current class
-            /// </summary>
-            /// <value></value>
-            /// <returns></returns>
-            /// <remarks></remarks>
-            public bool IsTriggeredByBaseClass {
-                get {
-                    return TriggeringBaseClass != null && TriggeringBaseClass != Class;
-                }
-            }
-
+  
 
             public void OutlineText() {
 
                 var endPointExcludingNewline = InsertedEnd.CreateEditPoint();
-                endPointExcludingNewline.CharLeft(1);
+                endPointExcludingNewline.CharLeft();
                 InsertStart.CreateEditPoint().OutlineSection(endPointExcludingNewline);
             }
 
@@ -115,15 +103,30 @@ namespace RgenLib.TaggedSegment {
                 return InsertedEnd;
             }
 
-            #region Tag Generation 
+            #region Tag Generation
 
- 
+            public string GenTag() {
+                return Manager.TagFormat == TagFormat.Json ? GenJsonTag() : GenXmlTag().ToString();
+            }
+            public string GenJsonTag() {
+               // var options = new ModalOptions { href = "file.html", type = "full" };
+                var serializer = new JsonSerializer {NullValueHandling = NullValueHandling.Ignore};
+                var stringWriter = new StringWriter();
+                var writer = new JsonTextWriter(stringWriter) {QuoteName = false};
+                serializer.Serialize(writer, new TagWrapper<T>( OptionTag));
+                writer.Close();
+                var json = stringWriter.ToString();
+                return json;
+            }
+
             public XElement GenXmlTag() {
                 //set to null if it's default, so it doesn't need to be written in the tag
-                var triggerType = IsTriggeredByBaseClass ? (TriggerTypes?)TriggerTypes.BaseClassAttribute : null;
-                var triggerInfo = (triggerType == TriggerTypes.BaseClassAttribute) ? TriggeringBaseClass.Name : null;
+                var isTriggeredByBaseClass = TriggeringBaseClass != null && TriggeringBaseClass != Class;
 
-                var xml = new XElement(Manager<T>.Tag.TagPrototype);
+                var triggerType = isTriggeredByBaseClass ? (TriggerTypes?)TriggerTypes.AttributeInBaseClass : null;
+                var triggerInfo = (triggerType == TriggerTypes.AttributeInBaseClass) ? TriggeringBaseClass.Name : null;
+
+                var xml = new XElement(Tag.TagPrototype);
                 if (triggerType != null) {
                     xml.SetAttributeValue("Trigger", triggerType.ToString());
                 }
@@ -131,10 +134,10 @@ namespace RgenLib.TaggedSegment {
                     xml.SetAttributeValue("TriggerInfo", triggerInfo);
                 }
 
-                xml.SetAttributeValue(GeneratedSegment.GenerateDateXmlName, DateTime.Now.ToString(Settings.TagDateFormat, Settings.TagDateCulture));
+                xml.SetAttributeValue(Tag.GenerateDatePropertyName, DateTime.Now.ToString(Constants.TagDateFormat, Constants.TagDateCulture));
 
-            
-     
+
+
                 foreach (var keyValuePair in XmlAttributeAttribute.GetXmlProperties(typeof(Tag))) {
 
                     var propValue = keyValuePair.Value.GetValue(OptionTag);
@@ -147,38 +150,60 @@ namespace RgenLib.TaggedSegment {
                 return xml;
             }
 
-            public string CreateTaggedCommentText() {
+
+            public string CreateXmlTaggedCommentText() {
                 //?Newline is added surrounding the text because we can't figure out how to add newline in TagXmlWriter
                 var xml = GenXmlTag();
                 xml.Add(Environment.NewLine + Content + Environment.NewLine);
                 return XmlWriter.ToCommentedString(xml);
             }
 
-            public string CreateTaggedRegionName() {
+            public string CreateXmlTaggedRegionName()
+            {
                 var xml = GenXmlTag();
                 var regionNameXml = XmlWriter.ToRegionNameString(xml);
-                return TagNote.Conjoin("\t", regionNameXml);
-            }
+               return TagNote.Conjoin("\t", regionNameXml);
 
-            public string GenTaggedRegionText() {
-                var res = string.Format("#region {0}{1}{2}{1}{3}{1}", CreateTaggedRegionName(), Environment.NewLine, Content, "#endregion");
+            }
+     
+            public string GenTaggedRegionText(string regionName) {
+            
+                var res = string.Format("#region {0}{1}{2}{1}{3}{1}", regionName, Environment.NewLine, Content, "#endregion");
                 return res;
             }
+ 
 
-            public string GenText() {
-                switch (SegmentType) {
-                    case Types.Region:
-                        return GenTaggedRegionText();
-                    case Types.Statements:
-                        return CreateTaggedCommentText();
+            public string GenText()
+            {
+                OptionTag.GenerateDate = DateTime.Now;
+                switch (Manager.TagFormat) {
+                    case TagFormat.Xml:
+                        switch (SegmentType) {
+                            case Types.Region:
+                                return GenTaggedRegionText(CreateXmlTaggedRegionName());
+                            case Types.Statements:
+                                return CreateXmlTaggedCommentText();
+                            default:
+                                throw new Exception("Unknown SegmentType");
+                        }
+                    case TagFormat.Json:
+                        switch (SegmentType) {
+                            case Types.Region:
+                                return GenTaggedRegionText(GenJsonTag());
+                            case Types.Statements:
+                                return Constants.CodeCommentPrefix + GenJsonTag();
+                            default:
+                                throw new Exception("Unknown SegmentType");
+                        }
                     default:
-                        throw new Exception("Unknown SegmentType");
+                        throw new Exception("Unknown TagFormat");
                 }
+                
             }
 
 
 
-            #endregion 
+            #endregion
 
 
             /// <summary>

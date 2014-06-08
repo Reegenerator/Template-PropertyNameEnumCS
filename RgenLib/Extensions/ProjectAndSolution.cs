@@ -2,7 +2,6 @@
 //Formerly VB project-level imports:
 
 using System;
-using System.Windows.Forms;
 using EnvDTE;
 using EnvDTE80;
 
@@ -83,15 +82,14 @@ namespace RgenLib.Extensions
 		/// <remarks></remarks>
 		public static void SelectSolutionExplorerNode(this DTE2 dte2, string nodePath)
 		{
-			UIHierarchyItem item = null;
-			try
+		    try
 			{
-				item = dte2.ToolWindows.SolutionExplorer.GetItem(nodePath);
-				item.Select(vsUISelectionType.vsUISelectionTypeSelect);
+			    var item = dte2.ToolWindows.SolutionExplorer.GetItem(nodePath);
+			    item.Select(vsUISelectionType.vsUISelectionTypeSelect);
 			}
 			catch (Exception ex)
 			{
-			    Debug.DebugHere();
+			    Debug.DebugHere(ex);
 			}
 		}
 #endregion

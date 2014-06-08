@@ -3,10 +3,8 @@
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
-using System.Linq;
 using System.Reflection;
 using EnvDTE80;
-using Debug = RgenLib.Extensions.Debug;
 
 namespace RgenLib {
     public class TypeCacheList {
@@ -45,14 +43,14 @@ namespace RgenLib {
         public TypeInfo TypeInfo { get; set; }
 
         public TypeCache(string typeName, bool caseSensitiveMembers = false)
-            : this(Type.GetType(typeName)) {
+            : this(Type.GetType(typeName),caseSensitiveMembers) {
 
         }
 
         void AddOrReplaceMemberWithQualifiedName(MemberInfo m)
         {
             var dict = _publicInstanceMembers;
-            System.Diagnostics.Debug.Assert(m.DeclaringType != null, "m.DeclaringType != null");
+            Debug.Assert(m.DeclaringType != null, "m.DeclaringType != null");
             if (dict.ContainsKey(m.Name))
             {
                 dict.Remove(m.Name);
@@ -72,8 +70,8 @@ namespace RgenLib {
                     MemberInfo existingMemberWithSameName;
                     if (_publicInstanceMembers.TryGetValue(m.Name, out existingMemberWithSameName))
                     {
-                        System.Diagnostics.Debug.Assert(existingMemberWithSameName.DeclaringType != null, "existingMemberWithSameName.DeclaringType != null");
-                        System.Diagnostics.Debug.Assert(m.DeclaringType != null, "m.DeclaringType != null");
+                        Debug.Assert(existingMemberWithSameName.DeclaringType != null, "existingMemberWithSameName.DeclaringType != null");
+                        Debug.Assert(m.DeclaringType != null, "m.DeclaringType != null");
                         if (m.DeclaringType.IsSubclassOf(existingMemberWithSameName.DeclaringType))
                         {
                             //the overriding member takes precedent 
@@ -94,7 +92,7 @@ namespace RgenLib {
                 }
             }
             catch (Exception ex) {
-                Extensions.Debug.DebugHere();
+                Extensions.Debug.DebugHere(ex);
             }
         }
 
@@ -125,7 +123,7 @@ namespace RgenLib {
         }
 
         public MemberInfo TryGetMember(string key) {
-            MemberInfo value = null;
+            MemberInfo value;
             _publicInstanceMembers.TryGetValue(key, out value);
             return value;
         }
@@ -144,6 +142,11 @@ namespace RgenLib {
     public class TypeResolver {
         public static TypeCacheList TypeCacheList = new TypeCacheList();
         public static TypeCache ByType(Type type) {
+            return TypeCacheList.ByType(type);
+        }
+        public static TypeCache ByType<T>()
+        {
+            var type = typeof (T);
             return TypeCacheList.ByType(type);
         }
         public static bool Contains(Type type) {

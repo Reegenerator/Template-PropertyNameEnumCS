@@ -1,6 +1,5 @@
 ﻿//Formerly VB project-level imports:
 using System;
-using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.IO;
@@ -23,14 +22,13 @@ namespace RgenLib.Extensions
 {
 	public static class General
 	{
-		public const RegexOptions DefaultRegexOption = RegexOptions.Compiled | RegexOptions.IgnoreCase | RegexOptions.IgnorePatternWhitespace | RegexOptions.Singleline;
 
 #region Code element helpers
 
         private const string InterfaceImplementationPattern = @"^.*?\sAs\s.*?(?<impl>Implements\s.*?)$";
 
 	    private static readonly Type IsEqual_attrType = typeof(Attribute);
-		private static readonly Regex GetInterfaceImplementation_regex = new Regex(InterfaceImplementationPattern, DefaultRegexOption);
+		private static readonly Regex GetInterfaceImplementation_regex = new Regex(InterfaceImplementationPattern, RgenLib.TaggedSegment.Constants.DefaultRegexOption);
 		private static readonly Regex RemoveEmptyLines_regex = new Regex("^\\s+$[\\r\\n]*", RegexOptions.Multiline);
 		private static readonly Dictionary<string, Assembly> GetTypeFromProject_cache = new Dictionary<string, Assembly>();
 		//private static readonly ConcurrentDictionary<CodeClass, Type> ToPropertyInfo_classCache = new ConcurrentDictionary<CodeClass, Type>();
@@ -240,7 +238,7 @@ namespace RgenLib.Extensions
 			catch (Exception ex)
 			{
 
-			    Debug.DebugHere();
+			    Debug.DebugHere(ex);
 			}
 			return null;
 		}

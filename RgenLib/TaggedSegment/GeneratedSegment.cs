@@ -2,18 +2,15 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
-using System.Text;
 using System.Text.RegularExpressions;
-using System.Threading.Tasks;
 using System.Xml.Linq;
 using EnvDTE;
-using RgenLib.Attributes;
 using RgenLib.Extensions;
+using RgenLib.TaggedSegment.Json;
 
 namespace RgenLib.TaggedSegment {
     public partial class Manager<T> where T : TaggedCodeRenderer, new() {
         public class GeneratedSegment : Tag {
-            public const string GenerateDateXmlName = "Date";
 
             static GeneratedSegment() {
                 InitRegex();
@@ -26,21 +23,20 @@ namespace RgenLib.TaggedSegment {
                 get { return _range; }
             }
 
-            [XmlAttribute(GenerateDateXmlName)]
-            public DateTime? GenerateDate { get; set; }
+
 
             public GeneratedSegment(TextRange range) {
                 _range = range;
             }
 
             public bool IsOutdated(OptionTag option) {
-                if (this.RegenMode != option.RegenMode) return true;
+                if (RegenMode != option.RegenMode) return true;
 
                 switch (RegenMode) {
                     case RegenModes.Always:
                         return true;
                     default:
-                        return this.Version != option.Version;
+                        return Version != option.Version;
 
                 }
 
@@ -55,31 +51,23 @@ namespace RgenLib.TaggedSegment {
             public const string RegionBeginKeyword = "#region";
             public const string RegionEndKeyword = "#endregion";
 
-            // ReSharper disable once StaticFieldInGenericType
-            static private Regex _CommentRegex;
-            static public Regex CommentRegex {
-                get {
-                    return _CommentRegex;
-                }
-            }
-
-            // ReSharper disable once StaticFieldInGenericType
-            static private Regex _RegionRegex;
-
-            static public Regex RegionRegex {
-                get {
-                    return _RegionRegex;
-                }
-            }
-
-
+            // ReSharper disable StaticFieldInGenericType
+            static private Regex _xmlCommentRegex;
+            static public Regex XmlCommentRegex { get { return _xmlCommentRegex; } }
+            static private Regex _xmlRegionRegex;
+            static public Regex XmlRegionRegex { get { return _xmlRegionRegex; } }
+            //static private Regex _jsonCommentRegex;
+            //static public Regex jsonCommentRegex { get { return _jsonCommentRegex; } }
+            static private Regex _jsonRegionRegex;
+            static public Regex jsonRegionRegex { get { return _jsonRegionRegex; } }
+            // ReSharper restore StaticFieldInGenericType
 
             static private Regex GetRegexByType(Types segmentType) {
                 switch (segmentType) {
                     case Types.Region:
-                        return RegionRegex;
+                        return XmlRegionRegex;
                     case Types.Statements:
-                        return CommentRegex;
+                        return XmlCommentRegex;
                     default:
                         return null;
                 }
@@ -88,7 +76,7 @@ namespace RgenLib.TaggedSegment {
 
             static private void InitRegex() {
                 //initialize regex
-                const string regionPatternFormat = @"
+                const string xmlRegionPatternFormat = @"
                     [^\S\r\n]* #match whitespace (space/tabs due to document formatting)
                     (\{3}\s*(?<textinfo>[^<\r\n]*?)(?<xml><{0}\s*{1}='{2}'.*?/>))\s*
                     (?<content> 
@@ -104,7 +92,7 @@ namespace RgenLib.TaggedSegment {
                     )
                     \{4}(\r\n)?";
 
-                const string commentPatternFormat = @"
+                const string xmlCommentPatternFormat = @"
                     (
                     {3}(?<tag><{0}\s*{1}='{2}'\s*[^<>]*/>)
                     )
@@ -117,16 +105,40 @@ namespace RgenLib.TaggedSegment {
                         {3}(?<tagend></Gen>)\s*
                     )";
 
+                //quotes are doubled to escape them inside literal string
+                //curly braces are doubled to escape them for string.format
+                const string jsonRegionPatternFormat = @"
+                    \s* #match tabs/space before region 
+                (\{3}\s*(?<textinfo>[^\r\n]*?)
+                            (?<json>\{{{0}:\{{{1}:""{2}""[^\r\n]*\}}\}})\s*)
+                            (?<content> 
+                                (?>
+		                        (?! \{3} |\{4}) .
+	                        |
+		                        \{3} (?<Depth>)
+	                        |
+		                        \{4} (?<-Depth>)
+	                        )*
+	                        (?(Depth)(?!))
+        
+                            )
+                            \{4}(\s*)?";
 
-                var rendererAttr = Tag.TagPrototype.Attribute(Tag.RendererAttributeName);
-                var tagName = Tag.TagPrototype.Name.LocalName;
+                var rendererAttr = TagPrototype.Attribute(RendererAttributeName);
+                var tagName = TagPrototype.Name.LocalName;
 
-                var commentPattern = string.Format(commentPatternFormat, tagName, rendererAttr.Name, rendererAttr.Value, XmlWriter.CodeCommentPrefix);
-                _CommentRegex = new Regex(commentPattern, General.DefaultRegexOption);
-                var regPattern = string.Format(regionPatternFormat, tagName, rendererAttr.Name, rendererAttr.Value, RegionBeginKeyword, RegionEndKeyword);
-                _RegionRegex = new Regex(regPattern, General.DefaultRegexOption);
+                var templateName = typeof(T).Name;
 
-
+                var xmlCommentPattern = string.Format(xmlCommentPatternFormat, tagName, rendererAttr.Name, rendererAttr.Value, Constants.CodeCommentPrefix);
+                _xmlCommentRegex = new Regex(xmlCommentPattern, Constants.DefaultRegexOption);
+                var xmlRegPattern = string.Format(xmlRegionPatternFormat, tagName, rendererAttr.Name, rendererAttr.Value, RegionBeginKeyword, RegionEndKeyword);
+                _xmlRegionRegex = new Regex(xmlRegPattern, Constants.DefaultRegexOption);
+                var jsonRegPattern = string.Format(jsonRegionPatternFormat, 
+                                                    TagWrapper<T>.MainPropertyName,
+                                                    TemplateNamePropertyName,
+                                                    templateName,
+                                                    RegionBeginKeyword, RegionEndKeyword);
+                _jsonRegionRegex = new Regex(jsonRegPattern, Constants.DefaultRegexOption);
             }
             #endregion
 
@@ -147,10 +159,10 @@ namespace RgenLib.TaggedSegment {
                 var xmlContent = "";
                 switch (segmentType) {
                     case Types.Region:
-                        xmlContent = RegionRegex.Replace(text, "${xml}");
+                        xmlContent = XmlRegionRegex.Replace(text, "${xml}");
                         break;
                     case Types.Statements:
-                        xmlContent = CommentRegex.Replace(text, "${tag}${content}${tagend}");
+                        xmlContent = XmlCommentRegex.Replace(text, "${tag}${content}${tagend}");
                         break;
                 }
 
@@ -170,21 +182,20 @@ namespace RgenLib.TaggedSegment {
             private static object ParseXmlAttributeValue(PropertyInfo propInfo, string value) {
                 //Debug.DebugHere();
 
-                object parsed = null;
+                object parsed;
                 var propType = propInfo.PropertyType;
                 if (propType.IsEnum) {
                     //if enum, remove the Enum qualifier (e.g TagTypes.InsertPoint => InserPoint)
                     parsed = Enum.Parse(typeof(RegenModes), value);
                 }
-                else if (propType == typeof(DateTime) || propType == typeof(DateTime?))
-                {
-                    parsed = DateTime.ParseExact(value, Settings.TagDateFormat, Settings.TagDateCulture);
+                else if (propType == typeof(DateTime) || propType == typeof(DateTime?)) {
+                    parsed = DateTime.ParseExact(value, Constants.TagDateFormat, Constants.TagDateCulture);
                 }
                 else if (propType == typeof(string)) {
                     //remove quotes
                     parsed = value.Trim('\"');
                 }
-                
+
                 else {
                     parsed = value;
                 }
@@ -193,13 +204,12 @@ namespace RgenLib.TaggedSegment {
 
 
             private static GeneratedSegment ParseTextRange(TextRange range) {
-                string name;
                 try {
                     var tag = new GeneratedSegment(range);
                     var xmlProps = XmlAttributeAttribute.GetXmlProperties(typeof(GeneratedSegment));
                     var xTag = ExtractXml(range);
                     foreach (var attr in xTag.Attributes()) {
-                        name = attr.Name.LocalName;
+                        var name = attr.Name.LocalName;
 
 
                         //skip renderer name
@@ -215,7 +225,7 @@ namespace RgenLib.TaggedSegment {
                 }
                 catch (Exception ex) {
 
-                    Debug.DebugHere();
+                    Debug.DebugHere(ex);
                     throw;
                 }
 

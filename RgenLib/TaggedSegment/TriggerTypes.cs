@@ -1,10 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-
-namespace RgenLib.TaggedSegment {
+﻿namespace RgenLib.TaggedSegment {
     /// <summary>
     /// Cause of code generation
     /// </summary>
@@ -19,7 +13,7 @@ namespace RgenLib.TaggedSegment {
         /// Code generation is triggered because the baseClass is marked with a GeneratorAttribute
         /// </summary>
         /// <remarks></remarks>
-        BaseClassAttribute,
+        AttributeInBaseClass,
         /// <summary>
         /// Code generation was triggered by calling it as Reegenerator CodeSnippet
         /// </summary>
@@ -38,4 +32,10 @@ namespace RgenLib.TaggedSegment {
         Always
     }
 
+    public enum TagFormat
+    {
+        Default,
+        Xml = Default,
+        Json
+    }
 }
