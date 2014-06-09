@@ -20,7 +20,7 @@ namespace RgenLib.TaggedSegment
 	public class XmlWriter : XmlTextWriter
     {
         private const string CodeCommentPrefix = Constants.CodeCommentPrefix;
-        public Types SegmentType {get; set;}
+        public SegmentTypes SegmentType {get; set;}
 
 		//Property IsRegion As Boolean
 		public XmlWriter(StringWriter writer) : base(writer)
@@ -31,7 +31,7 @@ namespace RgenLib.TaggedSegment
 		public override void WriteStartElement(string prefix, string localname, string ns)
 		{
 			//insert inline comment character before the start tag
-			if (SegmentType == Types.Statements)
+			if (SegmentType == SegmentTypes.Statements)
 			{
 				WriteString(CodeCommentPrefix);
 			}
@@ -41,7 +41,7 @@ namespace RgenLib.TaggedSegment
 		public override void WriteFullEndElement()
 		{
 			//insert inline comment character before the end tag
-			if (SegmentType == Types.Statements)
+			if (SegmentType == SegmentTypes.Statements)
 			{
 				WriteString(CodeCommentPrefix);
 			}
@@ -51,7 +51,7 @@ namespace RgenLib.TaggedSegment
 		}
 		public static string ToCommentedString(XElement x)
 		{
-			return InternalToString(x, Types.Statements);
+			return InternalToString(x, SegmentTypes.Statements);
 		}
 
 		/// <summary>
@@ -61,7 +61,7 @@ namespace RgenLib.TaggedSegment
 		/// <param name="segmentType"></param>
 		/// <returns></returns>
 		/// <remarks></remarks>
-		private static string InternalToString(XElement x, Types segmentType)
+		private static string InternalToString(XElement x, SegmentTypes segmentType)
 		{
 			StringWriter writer = new StringWriter();
 			XmlWriter cw = new XmlWriter(writer) {SegmentType = segmentType};
@@ -81,7 +81,7 @@ namespace RgenLib.TaggedSegment
 		public static string ToRegionNameString(XElement x)
 		{
 
-			var xml = InternalToString(x, Types.Region);
+			var xml = InternalToString(x, SegmentTypes.Region);
 			//Escape quote to double quote, so it will be valid as region name
 			var res = EscapeQuote(xml);
 			return res;

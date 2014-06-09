@@ -7,6 +7,6 @@ namespace RgenLib.TaggedSegment {
         public static readonly CultureInfo TagDateCulture = CultureInfo.InvariantCulture;
         public const string CodeCommentPrefix = "//";
         public const RegexOptions DefaultRegexOption = RegexOptions.Compiled | RegexOptions.IgnoreCase | RegexOptions.IgnorePatternWhitespace | RegexOptions.Singleline;
-
+        public const string JsonTagPrefix="Reegenerator";
     }
 }

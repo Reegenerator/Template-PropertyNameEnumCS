@@ -5,6 +5,7 @@ using System.Reflection;
 using System.Text.RegularExpressions;
 using System.Xml.Linq;
 using EnvDTE;
+using Newtonsoft.Json;
 using RgenLib.Extensions;
 using RgenLib.TaggedSegment.Json;
 
@@ -52,29 +53,12 @@ namespace RgenLib.TaggedSegment {
             public const string RegionEndKeyword = "#endregion";
 
             // ReSharper disable StaticFieldInGenericType
-            static private Regex _xmlCommentRegex;
-            static public Regex XmlCommentRegex { get { return _xmlCommentRegex; } }
-            static private Regex _xmlRegionRegex;
-            static public Regex XmlRegionRegex { get { return _xmlRegionRegex; } }
-            //static private Regex _jsonCommentRegex;
-            //static public Regex jsonCommentRegex { get { return _jsonCommentRegex; } }
-            static private Regex _jsonRegionRegex;
-            static public Regex jsonRegionRegex { get { return _jsonRegionRegex; } }
-            // ReSharper restore StaticFieldInGenericType
+            private static Dictionary<TagFormat, Dictionary<SegmentTypes, Regex>> _regexDict;
+  
 
-            static private Regex GetRegexByType(Types segmentType) {
-                switch (segmentType) {
-                    case Types.Region:
-                        return XmlRegionRegex;
-                    case Types.Statements:
-                        return XmlCommentRegex;
-                    default:
-                        return null;
-                }
-
-            }
-
+    
             static private void InitRegex() {
+                _regexDict = new Dictionary<TagFormat, Dictionary<SegmentTypes, Regex>>();
                 //initialize regex
                 const string xmlRegionPatternFormat = @"
                     [^\S\r\n]* #match whitespace (space/tabs due to document formatting)
@@ -108,9 +92,9 @@ namespace RgenLib.TaggedSegment {
                 //quotes are doubled to escape them inside literal string
                 //curly braces are doubled to escape them for string.format
                 const string jsonRegionPatternFormat = @"
-                    \s* #match tabs/space before region 
+                    [^\S\r\n]* #match tabs/space, but not newline, before region 
                 (\{3}\s*(?<textinfo>[^\r\n]*?)
-                            (?<json>\{{{0}:\{{{1}:""{2}""[^\r\n]*\}}\}})\s*)
+                            (?<prefix>{0}:)(?<json>\{{{1}:""{2}""[^\r\n]*\}})\s*)
                             (?<content> 
                                 (?>
 		                        (?! \{3} |\{4}) .
@@ -128,17 +112,20 @@ namespace RgenLib.TaggedSegment {
                 var tagName = TagPrototype.Name.LocalName;
 
                 var templateName = typeof(T).Name;
-
+                _regexDict.Add(TagFormat.Xml, new Dictionary<SegmentTypes, Regex>());
                 var xmlCommentPattern = string.Format(xmlCommentPatternFormat, tagName, rendererAttr.Name, rendererAttr.Value, Constants.CodeCommentPrefix);
-                _xmlCommentRegex = new Regex(xmlCommentPattern, Constants.DefaultRegexOption);
+                _regexDict[TagFormat.Xml].Add(SegmentTypes.Statements,
+                    new Regex(xmlCommentPattern, Constants.DefaultRegexOption));
                 var xmlRegPattern = string.Format(xmlRegionPatternFormat, tagName, rendererAttr.Name, rendererAttr.Value, RegionBeginKeyword, RegionEndKeyword);
-                _xmlRegionRegex = new Regex(xmlRegPattern, Constants.DefaultRegexOption);
-                var jsonRegPattern = string.Format(jsonRegionPatternFormat, 
-                                                    TagWrapper<T>.MainPropertyName,
+                _regexDict[TagFormat.Xml].Add(SegmentTypes.Region, new Regex(xmlRegPattern, Constants.DefaultRegexOption));
+
+                _regexDict.Add(TagFormat.Json, new Dictionary<SegmentTypes, Regex>());
+                var jsonRegPattern = string.Format(jsonRegionPatternFormat,
+                                                    Constants.JsonTagPrefix,
                                                     TemplateNamePropertyName,
                                                     templateName,
                                                     RegionBeginKeyword, RegionEndKeyword);
-                _jsonRegionRegex = new Regex(jsonRegPattern, Constants.DefaultRegexOption);
+                _regexDict[TagFormat.Json].Add(SegmentTypes.Region, new Regex(jsonRegPattern, Constants.DefaultRegexOption));
             }
             #endregion
 
@@ -154,21 +141,44 @@ namespace RgenLib.TaggedSegment {
             public static XElement ExtractXml(TextRange range) {
 
                 var firstline = range.StartPoint.CreateEditPoint().GetLineText();
-                var segmentType = firstline.Trim().StartsWith(RegionBeginKeyword) ? Types.Region : Types.Statements;
+                var segmentType = firstline.Trim().StartsWith(RegionBeginKeyword) ? SegmentTypes.Region : SegmentTypes.Statements;
                 var text = range.GetText();
                 var xmlContent = "";
                 switch (segmentType) {
-                    case Types.Region:
-                        xmlContent = XmlRegionRegex.Replace(text, "${xml}");
+                    case SegmentTypes.Region:
+                        xmlContent = _regexDict[TagFormat.Xml][SegmentTypes.Region].Replace(text, "${xml}");
                         break;
-                    case Types.Statements:
-                        xmlContent = XmlCommentRegex.Replace(text, "${tag}${content}${tagend}");
+                    case SegmentTypes.Statements:
+                        xmlContent = _regexDict[TagFormat.Xml][SegmentTypes.Statements].Replace(text, "${tag}${content}${tagend}");
                         break;
                 }
 
                 return XDocument.Parse(xmlContent).Root;
             }
+            /// <summary>
+            /// Extract valid xml inside Region Name and within inline comment
+            /// </summary>
+            /// <returns></returns>
+            /// <remarks>
+            /// </remarks>
+            public static string ExtractJson(TextRange range) {
 
+                var firstline = range.StartPoint.CreateEditPoint().GetLineText();
+                var segmentType = firstline.Trim().StartsWith(RegionBeginKeyword) ? SegmentTypes.Region : SegmentTypes.Statements;
+                var text = range.GetText();
+                var json = "";
+                switch (segmentType) {
+                    case SegmentTypes.Region:
+                        json = _regexDict[TagFormat.Json][SegmentTypes.Region].Replace(text, "${json}");
+                        break;
+                    //case SegmentTypes.Statements:
+                    //    json = XmlCommentRegex.Replace(text, "${tag}${content}${tagend}");
+                    //    break;
+                }
+
+                return json;
+
+            }
             /// <summary>
             /// Parse Attribute Argument into the actual string value
             /// </summary>
@@ -203,7 +213,30 @@ namespace RgenLib.TaggedSegment {
             }
 
 
-            private static GeneratedSegment ParseTextRange(TextRange range) {
+            private static GeneratedSegment ParseJson(TextRange range) {
+                Debug.DebugHere();
+                var tag = new GeneratedSegment(range);
+                var json = ExtractJson(range);
+                JsonConvert.PopulateObject(json, tag);
+                return tag;
+            }
+            private static GeneratedSegment ParseTextRange(TextRange range, TagFormat tagFormat) {
+                try {
+                    switch (tagFormat) {
+                        case TagFormat.Json:
+                            return ParseJson(range);
+                        case TagFormat.Xml:
+                            return ParseXml(range);
+                    }
+                }
+                catch (Exception ex) {
+
+                    Debug.DebugHere(ex);
+                    throw;
+                }
+                return null;
+            }
+            private static GeneratedSegment ParseXml(TextRange range) {
                 try {
                     var tag = new GeneratedSegment(range);
                     var xmlProps = XmlAttributeAttribute.GetXmlProperties(typeof(GeneratedSegment));
@@ -264,12 +297,11 @@ namespace RgenLib.TaggedSegment {
             /// Not using EditPoint.FindPattern because it can only search from startpoint to end of doc, no way to limit to selection
             /// Not using DTE Find because it has to change params of current find dialog, might screw up normal find usage
             ///  </remarks>
-            static public GeneratedSegment[] FindSegments(Writer info) {
+            static public GeneratedSegment[] FindSegments(Writer writer) {
 
-                var regex = GetRegexByType(info.SegmentType);
-
+                var regex = _regexDict[writer.TagFormat][writer.SegmentType];
                 //Using regex in FindPattern does
-                var text = info.GetSearchText();
+                var text = writer.GetSearchText();
                 var matches = regex.Matches(text);
                 var segments = new List<GeneratedSegment>();
                 foreach (var m in matches.Cast<Match>()) {
@@ -278,7 +310,7 @@ namespace RgenLib.TaggedSegment {
 
                     if (m.Success) {
                         //Convert match into start and end TextPoints
-                        matchStart = info.SearchStart.CreateEditPoint();
+                        matchStart = writer.SearchStart.CreateEditPoint();
                         matchStart.CharRightExact(m.Index);
                         matchEnd = matchStart.CreateEditPoint();
                         matchEnd.CharRightExact(m.Length);
@@ -287,7 +319,7 @@ namespace RgenLib.TaggedSegment {
 
                     var range = new TextRange(matchStart, matchEnd);
                     if (range.IsValid) {
-                        var tag = ParseTextRange(range);
+                        var tag = ParseTextRange(range, writer.Manager.TagFormat);
                         segments.Add(tag);
                     }
                 }

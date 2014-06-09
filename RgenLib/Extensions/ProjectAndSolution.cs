@@ -1,6 +1,4 @@
 ﻿
-//Formerly VB project-level imports:
-
 using System;
 using EnvDTE;
 using EnvDTE80;

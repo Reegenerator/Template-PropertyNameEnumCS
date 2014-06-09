@@ -1,5 +1,4 @@
-﻿//Formerly VB project-level imports:
-
+﻿
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;

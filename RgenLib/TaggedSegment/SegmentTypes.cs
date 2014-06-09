@@ -1,7 +1,7 @@
 ﻿
 namespace RgenLib.TaggedSegment
 {
-	public enum Types
+	public enum SegmentTypes
 	{
 		Region,
 		Statements

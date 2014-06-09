@@ -91,7 +91,7 @@
     <Compile Include="TaggedSegment\TextRange.cs" />
     <Compile Include="TaggedSegment\TriggerInfo.cs" />
     <Compile Include="TaggedSegment\TriggerTypes.cs" />
-    <Compile Include="TaggedSegment\Types.cs" />
+    <Compile Include="TaggedSegment\SegmentTypes.cs" />
     <Compile Include="TaggedSegment\Writer.cs" />
     <Compile Include="TaggedSegment\XmlWriter.cs" />
     <Compile Include="XmlAttributeAttribute.cs" />

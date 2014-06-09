@@ -1,6 +1,4 @@
-﻿//Formerly VB project-level imports:
-
-using EnvDTE;
+﻿using EnvDTE;
 
 namespace RgenLib.Extensions
 {

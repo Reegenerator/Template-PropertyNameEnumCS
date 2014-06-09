@@ -45,7 +45,7 @@ namespace RgenLib.TaggedSegment {
                 Category = segCategory;
             }
 
-
+            public TagFormat TagFormat { get { return Manager.TagFormat; } }
             public string Category { get; set; }
             public CodeClass2 TriggeringBaseClass { get; set; }
             public CodeClass2 Class { get; set; }
@@ -54,7 +54,7 @@ namespace RgenLib.TaggedSegment {
             public TextPoint SearchEnd { get; set; }
             public TextPoint InsertStart { get; set; }
             public TextPoint InsertedEnd { get; set; }
-            public Types SegmentType { get; set; }
+            public SegmentTypes SegmentType { get; set; }
             public string Content { get; set; }
             public string ProcessedContent { get; set; }
             /// <summary>
@@ -113,10 +113,10 @@ namespace RgenLib.TaggedSegment {
                 var serializer = new JsonSerializer {NullValueHandling = NullValueHandling.Ignore};
                 var stringWriter = new StringWriter();
                 var writer = new JsonTextWriter(stringWriter) {QuoteName = false};
-                serializer.Serialize(writer, new TagWrapper<T>( OptionTag));
+                serializer.Serialize(writer, OptionTag);
                 writer.Close();
                 var json = stringWriter.ToString();
-                return json;
+                return string.Format("{0}:{1}", Constants.JsonTagPrefix, json);
             }
 
             public XElement GenXmlTag() {
@@ -179,18 +179,18 @@ namespace RgenLib.TaggedSegment {
                 switch (Manager.TagFormat) {
                     case TagFormat.Xml:
                         switch (SegmentType) {
-                            case Types.Region:
+                            case SegmentTypes.Region:
                                 return GenTaggedRegionText(CreateXmlTaggedRegionName());
-                            case Types.Statements:
+                            case SegmentTypes.Statements:
                                 return CreateXmlTaggedCommentText();
                             default:
                                 throw new Exception("Unknown SegmentType");
                         }
                     case TagFormat.Json:
                         switch (SegmentType) {
-                            case Types.Region:
+                            case SegmentTypes.Region:
                                 return GenTaggedRegionText(GenJsonTag());
-                            case Types.Statements:
+                            case SegmentTypes.Statements:
                                 return Constants.CodeCommentPrefix + GenJsonTag();
                             default:
                                 throw new Exception("Unknown SegmentType");

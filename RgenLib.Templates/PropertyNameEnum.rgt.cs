@@ -45,9 +45,10 @@ namespace RgenLib.Templates {
 
             var writer = Manager.CreateWriter() ;
             writer.Class = cls;
+            writer.SegmentType = SegmentTypes.Region;
             writer.SearchStart = cls.StartPoint;
             writer.SearchEnd = cls.EndPoint;
-            writer.OptionTag = new ManagerType.OptionTag() { Version = Version, RegenMode = RegenModes.Always };
+            writer.OptionTag = new ManagerType.OptionTag() { Version = Version, RegenMode = RegenModes.Always};
             writer.Content = output.ToString();
             writer.InsertStart =cls.GetStartPoint(vsCMPart.vsCMPartBody);
             writer.InsertOrReplace();
@@ -80,12 +81,12 @@ namespace RgenLib.Templates {
             return cls;
         }
 
-        private Type _OptionType;
+        private Type _optionType;
         public override Type OptionAttributeType {
             get
             {
-                _OptionType = _OptionType ?? typeof (PropertyNamesOptionAttribute);
-                return _OptionType;
+                _optionType = _optionType ?? typeof (PropertyNamesOptionAttribute);
+                return _optionType;
             }
         }
     }

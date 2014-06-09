@@ -1,5 +1,4 @@
-﻿//Formerly VB project-level imports:
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.IO;
@@ -196,8 +195,7 @@ namespace RgenLib.Extensions
 		}
 		public static bool IsEqual(this CodeElement2 ele, Type type)
 		{
-//INSTANT C# NOTE: VB local static variable moved to class level:
-//			Static attrType As Type = GetType(Attribute)
+
 			return ele.FullName == type.FullName || ele.Name == type.Name || (type.IsSubclassOf(IsEqual_attrType) && (ele.FullName + "Attribute" == type.FullName || ele.Name + "Attribute" == type.Name));
 		}
 
@@ -505,8 +503,7 @@ namespace RgenLib.Extensions
 
 		public static string RemoveEmptyLines(this string s)
 		{
-//INSTANT C# NOTE: VB local static variable moved to class level:
-//			Static regex As Regex = new Regex("^\\s+$[\\r\\n]*", RegexOptions.Multiline)
+
 			return RemoveEmptyLines_regex.Replace(s, "");
 		}
 
