@@ -109,9 +109,8 @@ namespace RgenLib.TaggedSegment {
                 return Manager.TagFormat == TagFormat.Json ? GenJsonTag() : GenXmlTag().ToString();
             }
             public string GenJsonTag() {
-                // var options = new ModalOptions { href = "file.html", type = "full" };
-                var serializeTemplateFirstResolver = new OrderedContractResolver(p => p.PropertyName == Tag.TemplateNamePropertyName? "0" + p.PropertyName: p.PropertyName);
-                var serializer = new JsonSerializer { NullValueHandling = NullValueHandling.Ignore, ContractResolver = serializeTemplateFirstResolver };
+               
+                var serializer = new JsonSerializer { NullValueHandling = NullValueHandling.Ignore, ContractResolver = Tag.OrderedPropertyResolver };
                 var stringWriter = new StringWriter();
                 var writer = new JsonTextWriter(stringWriter) { QuoteName = false };
                 serializer.Serialize(writer, OptionTag);

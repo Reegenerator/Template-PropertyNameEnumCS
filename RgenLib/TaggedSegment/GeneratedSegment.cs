@@ -108,7 +108,7 @@ namespace RgenLib.TaggedSegment {
                             )
                             \{4}(\r\n)?";
 
-                var rendererAttr = TagPrototype.Attribute(RendererAttributeName);
+                var rendererAttr = TagPrototype.Attribute(XmlRendererAttributeName);
                 var tagName = TagPrototype.Name.LocalName;
 
                 var templateName = typeof(T).Name;
@@ -245,7 +245,7 @@ namespace RgenLib.TaggedSegment {
 
 
                         //skip renderer name
-                        if (name == RendererAttributeName) {
+                        if (name == XmlRendererAttributeName) {
                             continue;
                         }
 
