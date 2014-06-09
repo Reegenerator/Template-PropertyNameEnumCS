@@ -78,7 +78,7 @@ namespace RgenLib.TaggedSegment {
                 get { return _Status ?? (_Status = new StringBuilder()); }
             }
 
-  
+
 
             public void OutlineText() {
 
@@ -109,10 +109,11 @@ namespace RgenLib.TaggedSegment {
                 return Manager.TagFormat == TagFormat.Json ? GenJsonTag() : GenXmlTag().ToString();
             }
             public string GenJsonTag() {
-               // var options = new ModalOptions { href = "file.html", type = "full" };
-                var serializer = new JsonSerializer {NullValueHandling = NullValueHandling.Ignore};
+                // var options = new ModalOptions { href = "file.html", type = "full" };
+                var serializeTemplateFirstResolver = new OrderedContractResolver(p => p.PropertyName == Tag.TemplateNamePropertyName? "0" + p.PropertyName: p.PropertyName);
+                var serializer = new JsonSerializer { NullValueHandling = NullValueHandling.Ignore, ContractResolver = serializeTemplateFirstResolver };
                 var stringWriter = new StringWriter();
-                var writer = new JsonTextWriter(stringWriter) {QuoteName = false};
+                var writer = new JsonTextWriter(stringWriter) { QuoteName = false };
                 serializer.Serialize(writer, OptionTag);
                 writer.Close();
                 var json = stringWriter.ToString();
@@ -158,23 +159,21 @@ namespace RgenLib.TaggedSegment {
                 return XmlWriter.ToCommentedString(xml);
             }
 
-            public string CreateXmlTaggedRegionName()
-            {
+            public string CreateXmlTaggedRegionName() {
                 var xml = GenXmlTag();
                 var regionNameXml = XmlWriter.ToRegionNameString(xml);
-               return TagNote.Conjoin("\t", regionNameXml);
+                return TagNote.Conjoin("\t", regionNameXml);
 
             }
-     
+
             public string GenTaggedRegionText(string regionName) {
-            
+
                 var res = string.Format("#region {0}{1}{2}{1}{3}{1}", regionName, Environment.NewLine, Content, "#endregion");
                 return res;
             }
- 
 
-            public string GenText()
-            {
+
+            public string GenText() {
                 OptionTag.GenerateDate = DateTime.Now;
                 switch (Manager.TagFormat) {
                     case TagFormat.Xml:
@@ -198,7 +197,7 @@ namespace RgenLib.TaggedSegment {
                     default:
                         throw new Exception("Unknown TagFormat");
                 }
-                
+
             }
 
 

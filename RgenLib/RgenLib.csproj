@@ -82,6 +82,7 @@
     <Compile Include="TaggedSegment\CodeClassJsonConverter.cs" />
     <Compile Include="TaggedSegment\GeneratedSegment.cs" />
     <Compile Include="TaggedSegment\Json\EnumConverter.cs" />
+    <Compile Include="TaggedSegment\Json\OrderedSerializerSettings.cs" />
     <Compile Include="TaggedSegment\Json\TagWrapper.cs" />
     <Compile Include="TaggedSegment\Json\VersionConverter.cs" />
     <Compile Include="TaggedSegment\OptionTag.cs" />

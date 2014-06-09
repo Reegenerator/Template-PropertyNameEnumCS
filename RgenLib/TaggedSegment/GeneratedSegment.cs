@@ -106,7 +106,7 @@ namespace RgenLib.TaggedSegment {
 	                        (?(Depth)(?!))
         
                             )
-                            \{4}(\s*)?";
+                            \{4}(\r\n)?";
 
                 var rendererAttr = TagPrototype.Attribute(RendererAttributeName);
                 var tagName = TagPrototype.Name.LocalName;
@@ -214,7 +214,6 @@ namespace RgenLib.TaggedSegment {
 
 
             private static GeneratedSegment ParseJson(TextRange range) {
-                Debug.DebugHere();
                 var tag = new GeneratedSegment(range);
                 var json = ExtractJson(range);
                 JsonConvert.PopulateObject(json, tag);

@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Xml.Linq;
 using Newtonsoft.Json;
+using Newtonsoft.Json.Converters;
 using RgenLib.TaggedSegment.Json;
 
 namespace RgenLib.TaggedSegment {
@@ -10,9 +11,8 @@ namespace RgenLib.TaggedSegment {
         /// </summary>
         [JsonObject(MemberSerialization.OptIn)]
         public abstract class Tag {
-
-            public Tag() {
-                RegenMode = RegenModes.Once;
+            protected Tag() {
+                RegenMode = RegenModes.Never;
             }
             public const string TagName = "Gen";
 
@@ -51,7 +51,7 @@ namespace RgenLib.TaggedSegment {
             public string Category { get; set; }
 
             [JsonProperty(PropertyName = RegenModePropertyName)][XmlAttribute(RegenModePropertyName)]
-            [JsonConverter(typeof(EnumConverter))]
+            [JsonConverter(typeof(StringEnumConverter))]
             public RegenModes RegenMode { get; set; }
 
             public TagTypes TagType { get; set; }

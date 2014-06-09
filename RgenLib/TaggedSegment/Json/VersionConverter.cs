@@ -7,12 +7,11 @@ namespace RgenLib.TaggedSegment.Json {
         public override void WriteJson(JsonWriter writer, object value, JsonSerializer serializer)
         {
             var ver = (Version) value;
-            writer.WriteRawValue(ver.ToString());
+            writer.WriteValue(ver.ToString());
         }
 
         public override object ReadJson(JsonReader reader, Type objectType, object existingValue, JsonSerializer serializer)
         {
-            Debug.DebugHere();
             Version ver;
             Version.TryParse(reader.Value.ToString(), out ver);
             return ver;

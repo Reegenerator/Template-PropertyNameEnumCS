@@ -48,7 +48,7 @@ namespace RgenLib.Templates {
             writer.SegmentType = SegmentTypes.Region;
             writer.SearchStart = cls.StartPoint;
             writer.SearchEnd = cls.EndPoint;
-            writer.OptionTag = new ManagerType.OptionTag() { Version = Version, RegenMode = RegenModes.Always};
+            writer.OptionTag = new ManagerType.OptionTag() { Version = Version, RegenMode = RegenModes.Always, Trigger = new TriggerInfo( TriggerTypes.CodeSnippet)};
             writer.Content = output.ToString();
             writer.InsertStart =cls.GetStartPoint(vsCMPart.vsCMPartBody);
             writer.InsertOrReplace();

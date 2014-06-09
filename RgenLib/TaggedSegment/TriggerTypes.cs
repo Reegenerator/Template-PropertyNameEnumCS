@@ -27,15 +27,14 @@
 
     public enum RegenModes {
         Default,
-        OnVersionChanged = Default,
-        Once,
+        Never = Default,
+        OnVersionChanged,
         Always
     }
 
-    public enum TagFormat
-    {
+    public enum TagFormat {
         Default,
-        Xml = Default,
-        Json
+        Json = Default,
+        Xml
     }
 }
